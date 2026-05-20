@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事業計画 シナリオシミュレーター</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#07101f;
+    --panel:#0b1a30;
+    --panel2:#0e2040;
+    --line:#1a3560;
+    --txt:#f0f6ff;
+    --muted:#8ab8d0;
+    --accent:#439FD9;
+    --primary:#0D378C;
+    --good:#34d399;
+    --bad:#f87171;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;}
+
+  /* ── ヘッダー（白背景・ロゴ配置） ── */
+  header{
+    background:#fff;
+    border-bottom:3px solid var(--primary);
+    padding:10px 24px;
+    display:flex;align-items:center;gap:20px;
+  }
+  header img.logo{height:44px;display:block;}
+  header .hd-divider{width:1px;height:36px;background:#c8d8ec;}
+  header .hd-text{}
+  header h1{margin:0;font-size:16px;font-weight:700;color:var(--primary);}
+  header .sub{color:#5a7fa0;font-size:11px;margin-top:2px;}
+
+  /* ── レイアウト ── */
+  .wrap{padding:16px 20px;max-width:1400px;margin:0 auto;}
+  .controls{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;
+    position:-webkit-sticky;position:sticky;top:0;z-index:20;margin-bottom:16px;
+    box-shadow:0 4px 16px rgba(0,0,0,.5);
+  }
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .views{display:flex;gap:8px;align-items:center;}
+  .views .lbl{color:var(--muted);font-size:12px;margin-right:4px;}
+  .ctrl-toggle{display:none;}
+  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px;}
+  .param label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
+  select{
+    width:100%;padding:8px 10px;
+    background:var(--panel2);color:var(--txt);
+    border:1px solid var(--line);border-radius:6px;font-size:14px;
+    appearance:none;
+  }
+  select:focus{outline:none;border-color:var(--accent);}
+  .presets{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .presets .lbl{color:var(--muted);font-size:12px;margin-right:4px;}
+  button{
+    padding:7px 14px;
+    background:transparent;color:var(--muted);
+    border:1px solid var(--line);border-radius:6px;cursor:pointer;font-size:13px;
+    transition:border-color .15s,color .15s,background .15s;
+  }
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  button.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+
+  /* ── カード ── */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px;}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+    border-left:4px solid var(--primary);
+  }
+  .card .t{color:var(--muted);font-size:12px;}
+  .card .v{font-size:23px;font-weight:700;margin-top:6px;color:var(--accent);}
+  .card .u{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px;}
+  .card .p{color:var(--muted);font-size:11px;margin-top:2px;}
+
+  /* ── グラフ ── */
+  .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:16px;}
+  .chartbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;}
+  .chartbox h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--muted);}
+
+  /* ── テーブル ── */
+  .tcap{color:var(--muted);font-size:11.5px;margin:0 0 8px;}
+  .tcap b{color:var(--accent);}
+  .tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .tscroll{max-height:74vh;overflow:auto;}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:11px;white-space:nowrap;}
+  th,td{padding:7px 12px;text-align:right;border-bottom:1px solid var(--line);background:var(--panel);}
+
+  /* 凍結：KPI項目列 */
+  thead th:first-child, tbody tr:not(.section) td:first-child{
+    position:sticky;left:0;z-index:2;text-align:left;background:var(--panel2);
+    width:74px;min-width:74px;max-width:74px;white-space:normal;}
+  /* 凍結：単位列 */
+  thead th:nth-child(2), tbody tr:not(.section) td:nth-child(2){
+    position:sticky;left:74px;z-index:2;text-align:center;background:var(--panel2);
+    width:50px;min-width:50px;max-width:50px;color:var(--muted);
+    box-shadow:6px 0 0 var(--panel2),4px 0 12px rgba(0,0,0,.8);}
+  thead th{position:-webkit-sticky;position:sticky;top:0;background:var(--panel2);color:var(--muted);font-weight:600;z-index:3;}
+  thead th:first-child,thead th:nth-child(2){z-index:4;}
+  td.unit{color:var(--muted);text-align:center;}
+  th.bd,td.bd{border-left:2px solid var(--accent);}
+  tr.section td:first-child{position:sticky;left:0;z-index:2;background:var(--panel2);color:var(--accent);font-weight:600;text-align:left;width:74px;min-width:74px;max-width:74px;white-space:normal;}
+  tr.section td:nth-child(2){position:sticky;left:74px;z-index:2;background:var(--panel2);box-shadow:6px 0 0 var(--panel2),4px 0 12px rgba(0,0,0,.8);}
+  tr.section td:nth-child(n+3){background:var(--panel2);}
+  td.neg{color:var(--bad);}
+
+  /* ── グループヘッダー行 ── */
+  tr.grp-hdr td{background:var(--primary);cursor:pointer;user-select:none;}
+  tr.grp-hdr td:first-child{
+    position:sticky;left:0;z-index:2;font-weight:700;text-align:left;
+    color:#fff;width:74px;min-width:74px;max-width:74px;white-space:normal;
+    letter-spacing:.03em;font-size:12px;}
+  tr.grp-hdr td:nth-child(2){
+    position:sticky;left:74px;z-index:2;
+    box-shadow:4px 0 8px rgba(0,0,0,.5);}
+  tr.grp-hdr:hover td{background:#0b2e78;}
+  tr.data-row.grp-hidden{display:none;}
+
+  #loading{padding:40px;text-align:center;color:var(--muted);}
+  @media(max-width:640px){
+    .ctrl-toggle{display:inline-block;}
+    #ctrlBody{display:none;}
+    #ctrlBody.open{display:block;}
+    .cards{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .card .v{font-size:19px;}
+    .charts{grid-template-columns:1fr;}
+    .wrap{padding:12px;}
+    header{padding:8px 14px;gap:10px;}
+    header img.logo{height:30px;}
+    header .hd-divider{height:26px;}
+    header h1{font-size:13px;white-space:nowrap;}
+    /* topbar を1行に収める */
+    .topbar{flex-wrap:nowrap;gap:8px;}
+    .views .lbl{display:none;}
+    .views button,.ctrl-toggle{padding:5px 8px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="logo.png" alt="エンジニアのミカタ">
+  <div class="hd-divider"></div>
+  <div class="hd-text">
+    <h1>事業計画 シナリオシミュレーター</h1>
+  </div>
+</header>
+<div class="wrap">
+  <div id="loading">データ読み込み中…（初回のみ）</div>
+  <div id="app" style="display:none;">
+    <div class="controls">
+      <div class="topbar">
+        <div class="views">
+          <span class="lbl">表示:</span>
+          <button data-view="year">年度</button>
+          <button data-view="quarter">四半期</button>
+          <button data-view="month">月次</button>
+        </div>
+        <button class="ctrl-toggle" id="ctrlToggle">条件を変更 ▾</button>
+      </div>
+      <div id="ctrlBody">
+        <div class="params" id="params"></div>
+        <div class="presets">
+          <span class="lbl">プリセット:</span>
+          <button data-preset="0">全て楽観</button>
+          <button data-preset="1">全て標準</button>
+          <button data-preset="2">全て悲観</button>
+        </div>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="charts">
+      <div class="chartbox"><h3>PP入社数（累計/期）　単位:人</h3><canvas id="ch1"></canvas></div>
+      <div class="chartbox"><h3>PP離職率</h3><canvas id="ch2"></canvas></div>
+      <div class="chartbox"><h3>粗利率・営業利益率（損益分岐点 = 営業利益率0%）</h3><canvas id="ch3"></canvas></div>
+      <div class="chartbox"><h3>営業担当・採用担当 人数　単位:人</h3><canvas id="ch4"></canvas></div>
+    </div>
+    <div class="tablebox">
+      <div style="padding:12px 14px 0;"><div class="tcap"><b>2026/4月期まで＝実績</b>　／　それ以降＝計画（境界に縦線）</div></div>
+      <div class="tscroll"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const VIEW = {
+  year:    {offset:0,  count:6},
+  quarter: {offset:6,  count:24},
+  month:   {offset:30, count:72},
+};
+// 各ビューでの「実績」最終インデックス（2026/4月期まで実績）
+const BOUNDARY = { year:0, quarter:3, month:11 };
+
+// KPI階層グループ定義（投資家視点）
+const GROUPS = [
+  {id:'g1', label:'損益サマリー',   open:true,
+   idx:[0,6,7,8,12,13,15,16]},
+  {id:'g2', label:'稼動・売上内訳', open:false,
+   idx:[1,2,3,4,5]},
+  {id:'g3', label:'PP人員KPI',      open:false,
+   idx:[39,40,41,42,43,44,45,46,47,48,49,50,51]},
+  {id:'g4', label:'コスト詳細',     open:false,
+   idx:[9,10,11,14,18,19,20,21,22,23,25,26,27,28,29,30,31,32,33,34,35,36,37]},
+  {id:'g5', label:'調達',           open:false,
+   idx:[53,54,55,56]},
+];
+const LEVELS = ["楽観","標準","悲観"];
+let D=null, state={key:"111111", view:"quarter"};
+let charts={};
+let curBoundary=3;
+
+// 実績/計画の境界に縦線を引くプラグイン
+const boundaryPlugin = {
+  id:'boundary',
+  afterDraw(chart){
+    const b=curBoundary;
+    const xs=chart.scales.x; if(!xs) return;
+    if(b<0 || b+1>=chart.data.labels.length) return;
+    const px=(xs.getPixelForValue(b)+xs.getPixelForValue(b+1))/2;
+    const {top,bottom}=chart.chartArea, ctx=chart.ctx;
+    ctx.save();
+    ctx.strokeStyle='#439FD9'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(px,top); ctx.lineTo(px,bottom); ctx.stroke();
+    ctx.setLineDash([]); ctx.font='10px sans-serif'; ctx.fillStyle='#8ab8d0';
+    ctx.textAlign='right'; ctx.fillText('実績',px-4,top+10);
+    ctx.textAlign='left';  ctx.fillText('計画',px+4,top+10);
+    ctx.restore();
+  }
+};
+Chart.register(boundaryPlugin);
+
+function findKpi(name){ return D.kpis.findIndex(k=>k.name===name); }
+function periodLabels(){ return D.periods[state.view]; }
+function sliceVals(kpiIdx){
+  const v=VIEW[state.view];
+  return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
+}
+function fmt(v,u){
+  if(v===null||v===undefined||v==="") return "";
+  if(u==="pct") return (v*100).toFixed(1)+"%";
+  if(u==="money"||u==="yen") return Math.round(v).toLocaleString();
+  if(Math.abs(v)<100) return v.toFixed(1);
+  return Math.round(v).toLocaleString();
+}
+
+function loadGroupState(){
+  try{
+    const s=localStorage.getItem('invplan_groups');
+    if(s){const o=JSON.parse(s);GROUPS.forEach(g=>{if(o[g.id]!==undefined)g.open=o[g.id];});return;}
+  }catch(e){}
+  // 初回訪問: スマホは全グループ折りたたみ
+  if(window.innerWidth<640) GROUPS.forEach(g=>g.open=false);
+}
+function saveGroupState(){
+  const o={};GROUPS.forEach(g=>o[g.id]=g.open);
+  localStorage.setItem('invplan_groups',JSON.stringify(o));
+}
+
+function buildParams(){
+  const c=document.getElementById("params");
+  c.innerHTML="";
+  D.params.forEach((p,i)=>{
+    const d=document.createElement("div"); d.className="param";
+    const cur=+state.key[i];
+    d.innerHTML=`<label>${p.key}</label><select data-pi="${i}">`+
+      p.levels.map((lv,j)=>`<option value="${j}" ${j===cur?"selected":""}>${lv}</option>`).join("")+
+      `</select>`;
+    c.appendChild(d);
+  });
+  c.querySelectorAll("select").forEach(s=>s.onchange=e=>{
+    const i=+e.target.dataset.pi, j=e.target.value;
+    state.key = state.key.substring(0,i)+j+state.key.substring(i+1);
+    render();
+  });
+}
+function syncParamSelects(){
+  document.querySelectorAll('#params select').forEach(s=>{ s.value=state.key[+s.dataset.pi]; });
+}
+
+function renderCards(){
+  const labels=periodLabels(); const lastIdx=labels.length-1; const period=labels[lastIdx];
+  // 内勤数 = 営業人数(18) + 採用部人数(25) + 管理部人員数(35)
+  const naikin=(sliceVals(18)[lastIdx]||0)+(sliceVals(25)[lastIdx]||0)+(sliceVals(35)[lastIdx]||0);
+  const cards=[
+    {disp:'売上高',      ki:0,  extra:''},
+    {disp:'営業利益',    ki:12, extra:''},
+    {disp:'PP入社数',    ki:44, extra:''},
+    {disp:'PP離職率',    ki:45, extra:''},
+    {disp:'内勤数',      ki:null, val:Math.round(naikin), unit:'人', u:'ppl', extra:'営業＋採用＋管理'},
+  ];
+  document.getElementById("cards").innerHTML=cards.map(c=>{
+    let v,unit,u;
+    if(c.ki!==null){const k=D.kpis[c.ki];v=fmt(sliceVals(c.ki)[lastIdx],k.u);unit=k.u==="pct"?"":k.unit;u=k.u;}
+    else{v=c.val.toLocaleString();unit=c.unit;}
+    return `<div class="card">
+      <div class="t">${c.disp}</div>
+      <div class="v">${v}<span class="u">${unit}</span></div>
+      <div class="p">${c.extra||period+' 時点'}</div>
+    </div>`;
+  }).join("");
+}
+
+function baseOpts(pct){
+  return {responsive:true,maintainAspectRatio:true,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#f0f6ff',font:{size:11}}},
+      tooltip:{backgroundColor:'#0e2040',borderColor:'#1a3560',borderWidth:1,callbacks:{label:c=>{const v=c.raw;const s=pct?(v*100).toFixed(1)+'%':Math.round(v).toLocaleString();return c.dataset.label+': '+s;}}}},
+    scales:{x:{ticks:{color:'#8ab8d0',font:{size:10},maxRotation:60},grid:{color:'#0e2040'}},
+      y:{ticks:{color:'#8ab8d0',font:{size:10},callback:v=>pct?(v*100).toFixed(0)+'%':v.toLocaleString()},grid:{color:'#0e2040'}}}};
+}
+function mk(id,type,datasets,labels,pct){
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(document.getElementById(id),{type:type,data:{labels:labels,datasets:datasets},options:baseOpts(pct)});
+}
+
+function renderCharts(){
+  curBoundary=BOUNDARY[state.view];
+  const labels=periodLabels();
+  mk("ch1","bar",[
+    {label:'PP入社数',data:sliceVals(findKpi("PP入社数（累計/期）")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
+  ],labels,false);
+  mk("ch2","line",[
+    {label:'PP離職率',data:sliceVals(findKpi("PP離職率")),borderColor:'#f87171',backgroundColor:'transparent',tension:.3,pointRadius:3,pointBackgroundColor:'#f87171'}
+  ],labels,true);
+  const zeros=labels.map(()=>0);
+  mk("ch3","line",[
+    {label:'粗利率',data:sliceVals(findKpi("粗利率")),borderColor:'#f59e0b',backgroundColor:'transparent',tension:.3,pointRadius:2},
+    {label:'営業利益率',data:sliceVals(findKpi("営業利益率")),borderColor:'#439FD9',backgroundColor:'transparent',tension:.3,pointRadius:2},
+    {label:'損益分岐点(0%)',data:zeros,borderColor:'#4a6080',borderDash:[6,4],pointRadius:0,borderWidth:1}
+  ],labels,true);
+  mk("ch4","bar",[
+    {label:'営業担当',data:sliceVals(findKpi("営業人数")),backgroundColor:'#0D378C99',borderColor:'#0D378C',borderWidth:1},
+    {label:'採用担当',data:sliceVals(findKpi("採用部人数")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
+  ],labels,false);
+}
+
+function renderTable(){
+  const labels=periodLabels();
+  const bdCol=BOUNDARY[state.view]+1;
+  const thead=document.querySelector("#tbl thead");
+  const tbody=document.querySelector("#tbl tbody");
+  thead.innerHTML="<tr><th>KPI項目</th><th>単位</th>"+
+    labels.map((l,i)=>`<th class="${i===bdCol?'bd':''}">${l}</th>`).join("")+"</tr>";
+
+  const empties=labels.map(()=>'<td></td>').join('');
+  let html="";
+  GROUPS.forEach(g=>{
+    const arrow=g.open?'▼':'▶';
+    html+=`<tr class="grp-hdr" data-gid="${g.id}"><td>${arrow} ${g.label}</td><td></td>${empties}</tr>`;
+    g.idx.forEach(ki=>{
+      const k=D.kpis[ki];
+      const vals=sliceVals(ki);
+      const hidden=g.open?'':'grp-hidden';
+      html+=`<tr class="data-row ${hidden}" data-gid="${g.id}"><td>${k.name}</td><td class="unit">${k.unit}</td>`+
+        vals.map((v,i)=>{
+          const cls=[(typeof v==="number"&&v<0)?"neg":"",i===bdCol?"bd":""].filter(Boolean).join(" ");
+          return `<td class="${cls}">${fmt(v,k.u)}</td>`;
+        }).join("")+`</tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+
+  // グループヘッダークリックで開閉（全再描画せずトグル）
+  tbody.querySelectorAll('tr.grp-hdr').forEach(tr=>{
+    tr.onclick=()=>{
+      const g=GROUPS.find(gg=>gg.id===tr.dataset.gid);
+      g.open=!g.open;
+      saveGroupState();
+      tr.querySelector('td').textContent=(g.open?'▼':'▶')+' '+g.label;
+      tbody.querySelectorAll(`tr.data-row[data-gid="${g.id}"]`).forEach(row=>{
+        row.classList.toggle('grp-hidden',!g.open);
+      });
+    };
+  });
+}
+
+function render(){
+  syncParamSelects();
+  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
+  renderCards(); renderCharts(); renderTable();
+}
+
+function initEvents(){
+  document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{ state.key=b.dataset.preset.repeat(6); render(); });
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{ state.view=b.dataset.view; render(); });
+  document.getElementById('ctrlToggle').onclick=()=>document.getElementById('ctrlBody').classList.toggle('open');
+}
+
+fetch("data.json").then(r=>r.json()).then(d=>{
+  D=d;
+  document.getElementById("loading").style.display="none";
+  document.getElementById("app").style.display="block";
+  loadGroupState();
+  buildParams(); initEvents(); render();
+}).catch(e=>{ document.getElementById("loading").textContent="データ読み込み失敗: "+e; });
+</script>
+</body>
+</html>
