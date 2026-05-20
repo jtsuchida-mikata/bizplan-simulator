@@ -389,8 +389,13 @@ function initEvents(){
   document.getElementById('ctrlToggle').onclick=()=>document.getElementById('ctrlBody').classList.toggle('open');
 }
 
-fetch("data.json").then(r=>r.json()).then(d=>{
-  D=d;
+// data.json を 25MB 上限対策で data1/data2 に分割。両方読み込んでマージする。
+Promise.all([
+  fetch("data1.json").then(r=>r.json()),
+  fetch("data2.json").then(r=>r.json())
+]).then(([d1,d2])=>{
+  D=d1;
+  Object.assign(D.data, d2.data);   // 後半combosを結合
   document.getElementById("loading").style.display="none";
   document.getElementById("app").style.display="block";
   loadGroupState();
