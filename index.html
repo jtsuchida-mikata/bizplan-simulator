@@ -209,7 +209,7 @@ const GROUPS = [
    idx:[53,54,55,56]},
 ];
 const LEVELS = ["楽観","標準","悲観"];
-let D=null, state={key:"111111", view:"quarter"};
+let D=null, state={key:"111111", view:"month"};
 let charts={};
 let curBoundary=3;
 
@@ -237,6 +237,11 @@ function findKpi(name){ return D.kpis.findIndex(k=>k.name===name); }
 function periodLabels(){ return D.periods[state.view]; }
 function sliceVals(kpiIdx){
   const v=VIEW[state.view];
+  return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
+}
+// カード用：表示ビューに関わらず常に年次データを返す
+function yearVals(kpiIdx){
+  const v=VIEW.year;
   return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
 }
 function fmt(v,u){
@@ -282,9 +287,10 @@ function syncParamSelects(){
 }
 
 function renderCards(){
-  const labels=periodLabels(); const lastIdx=labels.length-1; const period=labels[lastIdx];
+  // カードは表示ビューに関わらず最終年度（年次）の値を表示
+  const ylabels=D.periods.year; const yLast=ylabels.length-1; const period=ylabels[yLast];
   // 内勤数 = 営業人数(18) + 採用部人数(25) + 管理部人員数(35)
-  const naikin=(sliceVals(18)[lastIdx]||0)+(sliceVals(25)[lastIdx]||0)+(sliceVals(35)[lastIdx]||0);
+  const naikin=(yearVals(18)[yLast]||0)+(yearVals(25)[yLast]||0)+(yearVals(35)[yLast]||0);
   const cards=[
     {disp:'売上高',      ki:0,  extra:''},
     {disp:'営業利益',    ki:12, extra:''},
@@ -294,7 +300,7 @@ function renderCards(){
   ];
   document.getElementById("cards").innerHTML=cards.map(c=>{
     let v,unit,u;
-    if(c.ki!==null){const k=D.kpis[c.ki];v=fmt(sliceVals(c.ki)[lastIdx],k.u);unit=k.u==="pct"?"":k.unit;u=k.u;}
+    if(c.ki!==null){const k=D.kpis[c.ki];v=fmt(yearVals(c.ki)[yLast],k.u);unit=k.u==="pct"?"":k.unit;u=k.u;}
     else{v=c.val.toLocaleString();unit=c.unit;}
     return `<div class="card">
       <div class="t">${c.disp}</div>
