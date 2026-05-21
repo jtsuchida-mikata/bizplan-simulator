@@ -296,7 +296,7 @@ function renderCards(){
     {disp:'営業利益',    ki:12, extra:''},
     {disp:'PP入社数',    ki:44, extra:''},
     {disp:'PP離職率',    ki:45, extra:''},
-    {disp:'内勤数',      ki:null, val:Math.round(naikin), unit:'人', u:'ppl', extra:'営業＋採用＋管理'},
+    {disp:'内勤数（営業＋採用＋管理）', ki:null, val:Math.round(naikin), unit:'人', u:'ppl', extra:''},
   ];
   document.getElementById("cards").innerHTML=cards.map(c=>{
     let v,unit,u;
@@ -402,6 +402,8 @@ Promise.all([
 ]).then(([d1,d2])=>{
   D=d1;
   Object.assign(D.data, d2.data);   // 後半combosを結合
+  // 年度ラベル末尾の「 計」を除去（表・グラフ・カード共通）
+  D.periods.year = D.periods.year.map(l => String(l).replace(/\s*計\s*$/, ""));
   document.getElementById("loading").style.display="none";
   document.getElementById("app").style.display="block";
   loadGroupState();
