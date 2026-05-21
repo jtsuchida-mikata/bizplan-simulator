@@ -235,21 +235,9 @@ Chart.register(boundaryPlugin);
 
 function findKpi(name){ return D.kpis.findIndex(k=>k.name===name); }
 function periodLabels(){ return D.periods[state.view]; }
-
-// シナリオデータの遅延読み込み（先頭3桁ごとの27シャード）
-let CACHE={};                 // fullkey -> [[...]×57]
-let loadedShards=new Set();
-async function ensureShard(key){
-  const sh=key.slice(0,3);
-  if(loadedShards.has(sh)) return;
-  const r=await fetch(`shards/s_${sh}.json`);
-  if(!r.ok) throw new Error('shard '+sh+' '+r.status);
-  Object.assign(CACHE, await r.json());
-  loadedShards.add(sh);
-}
 function sliceVals(kpiIdx){
   const v=VIEW[state.view];
-  return CACHE[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
+  return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
 }
 function fmt(v,u){
   if(v===null||v===undefined||v==="") return "";
@@ -389,9 +377,7 @@ function renderTable(){
   });
 }
 
-async function render(){
-  try{ await ensureShard(state.key); }
-  catch(e){ console.error(e); return; }
+function render(){
   syncParamSelects();
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
   renderCards(); renderCharts(); renderTable();
@@ -403,11 +389,13 @@ function initEvents(){
   document.getElementById('ctrlToggle').onclick=()=>document.getElementById('ctrlBody').classList.toggle('open');
 }
 
-// 起動: meta.json（軽量）を読み込み → 現在シナリオのシャードのみ取得して表示。
-// 残りのシナリオは選択時に随時読み込む（スマホのメモリ・通信量対策）。
-fetch("meta.json").then(r=>r.json()).then(async meta=>{
-  D=meta;
-  await ensureShard(state.key);
+// data.json を 25MB 上限対策で data1/data2 に分割。両方読み込んでマージする。
+Promise.all([
+  fetch("data1.json").then(r=>r.json()),
+  fetch("data2.json").then(r=>r.json())
+]).then(([d1,d2])=>{
+  D=d1;
+  Object.assign(D.data, d2.data);   // 後半combosを結合
   document.getElementById("loading").style.display="none";
   document.getElementById("app").style.display="block";
   loadGroupState();
