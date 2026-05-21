@@ -235,14 +235,23 @@ Chart.register(boundaryPlugin);
 
 function findKpi(name){ return D.kpis.findIndex(k=>k.name===name); }
 function periodLabels(){ return D.periods[state.view]; }
+
+// シナリオデータの遅延読み込み（1シナリオ=1ファイル、選択時に取得しキャッシュ）
+let CACHE={};
+async function ensureCombo(key){
+  if(CACHE[key]) return;
+  const r=await fetch(`combos/${key}.json`);
+  if(!r.ok) throw new Error('combo '+key+' '+r.status);
+  CACHE[key]=await r.json();
+}
 function sliceVals(kpiIdx){
   const v=VIEW[state.view];
-  return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
+  return CACHE[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
 }
 // カード用：表示ビューに関わらず常に年次データを返す
 function yearVals(kpiIdx){
   const v=VIEW.year;
-  return D.data[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
+  return CACHE[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
 }
 function fmt(v,u){
   if(v===null||v===undefined||v==="") return "";
@@ -383,7 +392,9 @@ function renderTable(){
   });
 }
 
-function render(){
+async function render(){
+  try{ await ensureCombo(state.key); }
+  catch(e){ console.error(e); return; }
   syncParamSelects();
   document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===state.view));
   renderCards(); renderCharts(); renderTable();
@@ -395,15 +406,13 @@ function initEvents(){
   document.getElementById('ctrlToggle').onclick=()=>document.getElementById('ctrlBody').classList.toggle('open');
 }
 
-// data.json を 25MB 上限対策で data1/data2 に分割。両方読み込んでマージする。
-Promise.all([
-  fetch("data1.json").then(r=>r.json()),
-  fetch("data2.json").then(r=>r.json())
-]).then(([d1,d2])=>{
-  D=d1;
-  Object.assign(D.data, d2.data);   // 後半combosを結合
+// 起動: meta.json（軽量）を読み込み → 現在シナリオのファイルのみ取得して表示。
+// 残りのシナリオは選択時に随時読み込む（初回読み込み量を約45KBに圧縮）。
+fetch("meta.json").then(r=>r.json()).then(async meta=>{
+  D=meta;
   // 年度ラベル末尾の「 計」を除去（表・グラフ・カード共通）
   D.periods.year = D.periods.year.map(l => String(l).replace(/\s*計\s*$/, ""));
+  await ensureCombo(state.key);
   document.getElementById("loading").style.display="none";
   document.getElementById("app").style.display="block";
   loadGroupState();
