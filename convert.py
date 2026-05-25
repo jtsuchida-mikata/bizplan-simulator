@@ -71,7 +71,9 @@ for i in range(0, len(rows), NK):
     arr = []
     for j in range(NK):
         u = UNITS[j]
-        vals = [scale(u, block[j][c]) for c in range(8, 110)]
+        row_j = block[j]
+        # section行など末尾セルが切り詰められた行に対応（不足分はNone）
+        vals = [scale(u, row_j[c] if c < len(row_j) else None) for c in range(8, 110)]
         arr.append(vals)
     data[key] = arr
 
