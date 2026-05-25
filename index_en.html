@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>事業計画 シナリオシミュレーター</title>
+<title>Business Plan Scenario Simulator</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
@@ -19,21 +19,22 @@
     --bad:#f87171;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  body{margin:0;font-family:-apple-system,"Helvetica Neue",Arial,sans-serif;
     background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;}
 
-  /* ── ヘッダー（白背景・ロゴ配置） ── */
+  /* ── Header ── */
   header{
     background:#fff;
     border-bottom:3px solid var(--primary);
     padding:10px 24px;
     display:flex;align-items:center;gap:20px;
   }
+  header .hd-logo-block{display:flex;flex-direction:column;align-items:center;}
   header img.logo{height:44px;display:block;}
-  header .hd-divider{width:1px;height:36px;background:#c8d8ec;}
+  header .hd-company{color:var(--primary);font-size:10px;font-weight:600;margin-top:3px;letter-spacing:.04em;white-space:nowrap;}
+  header .hd-divider{width:1px;height:52px;background:#c8d8ec;}
   header .hd-text{}
   header h1{margin:0;font-size:16px;font-weight:700;color:var(--primary);}
-  header .sub{color:#5a7fa0;font-size:11px;margin-top:2px;}
   .lang-switch{margin-left:auto;}
   .lang-switch a{
     color:var(--primary);font-size:12px;font-weight:600;
@@ -42,7 +43,7 @@
   }
   .lang-switch a:hover{background:#f0f7ff;}
 
-  /* ── レイアウト ── */
+  /* ── Layout ── */
   .wrap{padding:16px 20px;max-width:1400px;margin:0 auto;}
   .controls{
     background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;
@@ -53,7 +54,7 @@
   .views{display:flex;gap:8px;align-items:center;}
   .views .lbl{color:var(--muted);font-size:12px;margin-right:4px;}
   .ctrl-toggle{display:none;}
-  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px;}
+  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:14px;}
   .param label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
   select{
     width:100%;padding:8px 10px;
@@ -73,7 +74,7 @@
   button:hover{border-color:var(--accent);color:var(--accent);}
   button.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
 
-  /* ── カード ── */
+  /* ── Cards ── */
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px;}
   .card{
     background:var(--panel);
@@ -85,12 +86,12 @@
   .card .u{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px;}
   .card .p{color:var(--muted);font-size:11px;margin-top:2px;}
 
-  /* ── グラフ ── */
+  /* ── Charts ── */
   .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:16px;}
   .chartbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;}
   .chartbox h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--muted);}
 
-  /* ── テーブル ── */
+  /* ── Table ── */
   .tcap{color:var(--muted);font-size:11.5px;margin:0 0 8px;}
   .tcap b{color:var(--accent);}
   .tablebox{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
@@ -98,47 +99,47 @@
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:11px;white-space:nowrap;}
   th,td{padding:7px 12px;text-align:right;border-bottom:1px solid var(--line);background:var(--panel);}
 
-  /* 凍結：KPI項目列 */
+  /* Frozen KPI column (wider than JA to fit English text) */
   thead th:first-child, tbody tr:not(.section) td:first-child{
     position:sticky;left:0;z-index:2;text-align:left;background:var(--panel2);
-    width:74px;min-width:74px;max-width:74px;white-space:normal;}
-  /* 凍結：単位列 */
+    width:130px;min-width:130px;max-width:130px;white-space:normal;}
+  /* Frozen unit column */
   thead th:nth-child(2), tbody tr:not(.section) td:nth-child(2){
-    position:sticky;left:74px;z-index:2;text-align:center;background:var(--panel2);
-    width:50px;min-width:50px;max-width:50px;color:var(--muted);
+    position:sticky;left:130px;z-index:2;text-align:center;background:var(--panel2);
+    width:60px;min-width:60px;max-width:60px;color:var(--muted);
     box-shadow:6px 0 0 var(--panel2),4px 0 12px rgba(0,0,0,.8);}
   thead th{position:-webkit-sticky;position:sticky;top:0;background:var(--panel2);color:var(--muted);font-weight:600;z-index:3;}
   thead th:first-child,thead th:nth-child(2){z-index:4;}
   td.unit{color:var(--muted);text-align:center;}
   th.bd,td.bd{border-left:2px solid var(--accent);}
-  tr.section td:first-child{position:sticky;left:0;z-index:2;background:var(--panel2);color:var(--accent);font-weight:600;text-align:left;width:74px;min-width:74px;max-width:74px;white-space:normal;}
-  tr.section td:nth-child(2){position:sticky;left:74px;z-index:2;background:var(--panel2);box-shadow:6px 0 0 var(--panel2),4px 0 12px rgba(0,0,0,.8);}
+  tr.section td:first-child{position:sticky;left:0;z-index:2;background:var(--panel2);color:var(--accent);font-weight:600;text-align:left;width:130px;min-width:130px;max-width:130px;white-space:normal;}
+  tr.section td:nth-child(2){position:sticky;left:130px;z-index:2;background:var(--panel2);box-shadow:6px 0 0 var(--panel2),4px 0 12px rgba(0,0,0,.8);}
   tr.section td:nth-child(n+3){background:var(--panel2);}
   td.neg{color:var(--bad);}
 
-  /* ── グループヘッダー行 ── */
+  /* Group header row */
   tr.grp-hdr td{background:var(--primary);cursor:pointer;user-select:none;}
   tr.grp-hdr td:first-child{
     position:sticky;left:0;z-index:2;font-weight:700;text-align:left;
-    color:#fff;width:74px;min-width:74px;max-width:74px;white-space:normal;
+    color:#fff;width:130px;min-width:130px;max-width:130px;white-space:normal;
     letter-spacing:.03em;font-size:12px;}
   tr.grp-hdr td:nth-child(2){
-    position:sticky;left:74px;z-index:2;
+    position:sticky;left:130px;z-index:2;
     box-shadow:4px 0 8px rgba(0,0,0,.5);}
   tr.grp-hdr:hover td{background:#0b2e78;}
   tr.data-row.grp-hidden{display:none;}
 
-  /* ── 中分類見出し（営業部門・PP 等） ── */
+  /* Sub-group header */
   tr.sub-hdr td{background:#10294a;}
   tr.sub-hdr td:first-child{color:var(--accent);font-weight:700;font-size:11px;letter-spacing:.02em;}
   tr.sub-hdr td:nth-child(n+3){background:#10294a;}
-  /* ── 明細のインデント（総額の内訳） ── */
+  /* Indented detail rows */
   tr.ind1 td:first-child{padding-left:22px;color:#b9d4ea;}
   tr.ind1 td:first-child::before{content:"└ ";color:var(--muted);margin-left:-14px;}
 
   #loading{padding:40px;text-align:center;color:var(--muted);}
 
-  /* ── タブナビ ── */
+  /* Tabs */
   .tabs{
     display:flex;gap:0;
     border-bottom:1px solid var(--line);
@@ -156,7 +157,7 @@
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
 
-  /* ── FAQ ── */
+  /* FAQ */
   .faq-intro{color:var(--muted);font-size:13px;margin-bottom:18px;}
   .faq-draft{
     background:#10294a;border:1px dashed var(--accent);
@@ -204,9 +205,9 @@
     .wrap{padding:12px;}
     header{padding:8px 14px;gap:10px;}
     header img.logo{height:30px;}
-    header .hd-divider{height:26px;}
+    header .hd-company{font-size:9px;margin-top:2px;}
+    header .hd-divider{height:38px;}
     header h1{font-size:13px;white-space:nowrap;}
-    /* topbar を1行に収める */
     .topbar{flex-wrap:nowrap;gap:8px;}
     .views .lbl{display:none;}
     .views button,.ctrl-toggle{padding:5px 8px;font-size:11px;}
@@ -219,132 +220,135 @@
 </head>
 <body>
 <header>
-  <img class="logo" src="logo.png" alt="エンジニアのミカタ">
+  <div class="hd-logo-block">
+    <img class="logo" src="logo.png" alt="Engineer no Mikata">
+    <div class="hd-company">Engineer no Mikata Inc.</div>
+  </div>
   <div class="hd-divider"></div>
   <div class="hd-text">
-    <h1>事業計画 シナリオシミュレーター</h1>
+    <h1>Business Plan Scenario Simulator</h1>
   </div>
-  <div class="lang-switch"><a href="index_en.html">English</a></div>
+  <div class="lang-switch"><a href="index.html">日本語</a></div>
 </header>
 <div class="wrap">
-  <!-- FAQ 公開保留中: 本文が揃ったら下記タブと #tab-faq を有効化する
+  <!-- FAQ on hold for publication: re-enable tabs and #tab-faq when content is ready
   <div class="tabs">
-    <button class="tab active" data-tab="sim">シミュレーター</button>
-    <button class="tab" data-tab="faq">よくある質問</button>
+    <button class="tab active" data-tab="sim">Simulator</button>
+    <button class="tab" data-tab="faq">FAQ</button>
   </div>
   -->
 
   <div id="tab-sim" class="tab-panel active">
-  <div id="loading">データ読み込み中…（初回のみ）</div>
+  <div id="loading">Loading data... (first time only)</div>
   <div id="app" style="display:none;">
     <div class="controls">
       <div class="topbar">
         <div class="views">
-          <span class="lbl">表示:</span>
-          <button data-view="year">年度</button>
-          <button data-view="quarter">四半期</button>
-          <button data-view="month">月次</button>
+          <span class="lbl">View:</span>
+          <button data-view="year">Annual</button>
+          <button data-view="quarter">Quarterly</button>
+          <button data-view="month">Monthly</button>
         </div>
-        <button class="ctrl-toggle" id="ctrlToggle">条件を変更 ▾</button>
+        <button class="ctrl-toggle" id="ctrlToggle">Adjust ▾</button>
       </div>
       <div id="ctrlBody">
         <div class="params" id="params"></div>
         <div class="presets">
-          <span class="lbl">プリセット:</span>
-          <button data-preset="0">全て楽観</button>
-          <button data-preset="1">全て標準</button>
-          <button data-preset="2">全て悲観</button>
+          <span class="lbl">Preset:</span>
+          <button data-preset="0">All Optimistic</button>
+          <button data-preset="1">All Standard</button>
+          <button data-preset="2">All Pessimistic</button>
         </div>
       </div>
     </div>
     <div class="cards" id="cards"></div>
     <div class="charts">
-      <div class="chartbox"><h3>PP入社数（累計/期）　単位:人</h3><canvas id="ch1"></canvas></div>
-      <div class="chartbox"><h3>PP離職率</h3><canvas id="ch2"></canvas></div>
-      <div class="chartbox"><h3>粗利率・営業利益率（損益分岐点 = 営業利益率0%）</h3><canvas id="ch3"></canvas></div>
-      <div class="chartbox"><h3>営業担当・採用担当 人数　単位:人</h3><canvas id="ch4"></canvas></div>
+      <div class="chartbox"><h3>PP New Hires (Period) — People</h3><canvas id="ch1"></canvas></div>
+      <div class="chartbox"><h3>PP Attrition Rate</h3><canvas id="ch2"></canvas></div>
+      <div class="chartbox"><h3>Gross & Operating Margin (Break-even = 0%)</h3><canvas id="ch3"></canvas></div>
+      <div class="chartbox"><h3>Sales & Recruiting Headcount — People</h3><canvas id="ch4"></canvas></div>
     </div>
     <div class="tablebox">
-      <div style="padding:12px 14px 0;"><div class="tcap"><b>2026/4月期まで＝実績</b>　／　それ以降＝計画（境界に縦線）</div></div>
+      <div style="padding:12px 14px 0;"><div class="tcap"><b>Through FY2026 = Actual</b>　/　Afterward = Plan (vertical line marks boundary)</div></div>
       <div class="tscroll"><table id="tbl"><thead></thead><tbody></tbody></table></div>
     </div>
   </div>
   </div><!-- /#tab-sim -->
 
-  <!-- FAQ 公開保留中 ここから（本文準備でき次第このコメントを外す）
+  <!-- FAQ on hold for publication: re-enable when content is ready
   <div id="tab-faq" class="tab-panel">
-    <div class="faq-draft">※ コンテンツ準備中。デザインのみ表示しています。</div>
-    <div class="faq-intro">皆様からよくいただく質問への回答をまとめています。</div>
+    <div class="faq-draft">* Content in preparation. Showing design only.</div>
+    <div class="faq-intro">Answers to frequently asked questions.</div>
 
-    <div class="faq-cat">事業について</div>
+    <div class="faq-cat">About the Business</div>
     <div class="faq-item open">
       <div class="faq-q">
         <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問1：ここに質問が入ります。例：御社の主要事業領域と差別化要因は何ですか？）</span>
+        <span class="faq-text">(Question 1: Placeholder. e.g., What is your main business domain and key differentiator?)</span>
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
         <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中。ここに数行〜十数行程度の回答が入ります。事業の概要、競合優位性、想定する市場規模などを記載予定。）</span>
+        <span class="faq-a-text">(Answer in preparation. A few lines to a dozen lines of response will go here. To include business overview, competitive advantage, addressable market, etc.)</span>
       </div>
     </div>
     <div class="faq-item">
       <div class="faq-q">
         <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問2：ここに質問が入ります。例：成長戦略の柱は何ですか？）</span>
+        <span class="faq-text">(Question 2: e.g., What is the core of your growth strategy?)</span>
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
         <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中）</span>
+        <span class="faq-a-text">(Answer in preparation)</span>
       </div>
     </div>
     <div class="faq-item">
       <div class="faq-q">
         <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問3）</span>
+        <span class="faq-text">(Question 3)</span>
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
         <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中）</span>
-      </div>
-    </div>
-
-    <div class="faq-cat">数字について</div>
-    <div class="faq-item">
-      <div class="faq-q">
-        <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問4：例：シミュレーターの「楽観/標準/悲観」の前提条件は何ですか？）</span>
-        <span class="faq-arrow">▼</span>
-      </div>
-      <div class="faq-a">
-        <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中）</span>
-      </div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q">
-        <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問5）</span>
-        <span class="faq-arrow">▼</span>
-      </div>
-      <div class="faq-a">
-        <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中）</span>
+        <span class="faq-a-text">(Answer in preparation)</span>
       </div>
     </div>
 
-    <div class="faq-cat">調達について</div>
+    <div class="faq-cat">About the Numbers</div>
     <div class="faq-item">
       <div class="faq-q">
         <span class="faq-mark faq-mark-q">Q</span>
-        <span class="faq-text">（質問6）</span>
+        <span class="faq-text">(Question 4: e.g., What are the assumptions behind Optimistic / Standard / Pessimistic?)</span>
         <span class="faq-arrow">▼</span>
       </div>
       <div class="faq-a">
         <span class="faq-mark faq-mark-a">A</span>
-        <span class="faq-a-text">（回答準備中）</span>
+        <span class="faq-a-text">(Answer in preparation)</span>
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">
+        <span class="faq-mark faq-mark-q">Q</span>
+        <span class="faq-text">(Question 5)</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        <span class="faq-mark faq-mark-a">A</span>
+        <span class="faq-a-text">(Answer in preparation)</span>
+      </div>
+    </div>
+
+    <div class="faq-cat">About Funding</div>
+    <div class="faq-item">
+      <div class="faq-q">
+        <span class="faq-mark faq-mark-q">Q</span>
+        <span class="faq-text">(Question 6)</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        <span class="faq-mark faq-mark-a">A</span>
+        <span class="faq-a-text">(Answer in preparation)</span>
       </div>
     </div>
   </div><!-- /#tab-faq -->
@@ -352,7 +356,7 @@
 </div>
 
 <script>
-// ── タブ切替 ＆ FAQ アコーディオン（データ読み込み非依存・即時動作） ──
+// ── Tab switch & FAQ accordion (immediate, data-independent) ──
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   const t=b.dataset.tab;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
@@ -360,53 +364,123 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 });
 document.querySelectorAll('.faq-q').forEach(q=>q.onclick=()=>q.parentElement.classList.toggle('open'));
 
+// ── Translation tables (JA data → EN display) ──
+const KPI_EN = [
+  "Revenue",                                  // 0
+  "Active Engagements",                       // 1
+  "PP Experienced",                           // 2
+  "PP Inexperienced",                         // 3
+  "BP",                                       // 4
+  "Avg. Monthly Unit Price",                  // 5
+  "Gross Profit",                             // 6
+  "Gross Margin",                             // 7
+  "Total SG&A",                               // 8
+  "Sales Dept. Cost",                         // 9
+  "Recruiting Dept. Cost",                    // 10
+  "Admin Dept. Cost",                         // 11
+  "Operating Profit",                         // 12
+  "Operating Margin",                         // 13
+  "SG&A as % of Gross Profit",                // 14
+  "Cash & Deposits",                          // 15
+  "Net Assets",                               // 16
+  "Sales Dept. Cost",                         // 17
+  "Sales Headcount",                          // 18
+  "Target Contracts",                         // 19
+  "Target Contracts per Person",              // 20
+  "Personnel Cost per Person (incl. benefits)",// 21
+  "Sales Other SG&A",                         // 22
+  "Sales Cost per Active Engagement",         // 23
+  "Recruiting Dept. Cost",                    // 24
+  "Recruiting Headcount",                     // 25
+  "Offer Acceptances per Person",             // 26
+  "Personnel Cost per Person (incl. benefits)",// 27
+  "Hires per Person",                         // 28
+  "Recruitment Media Cost",                   // 29
+  "Recruiting Other SG&A",                    // 30
+  "Personnel Cost per Offer Acceptance",      // 31
+  "Recruitment Cost per Offer Acceptance",    // 32
+  "Recruitment Cost per Hire",                // 33
+  "Admin Dept. Cost",                         // 34
+  "Admin Headcount",                          // 35
+  "Personnel Cost per Person (incl. benefits)",// 36
+  "Admin Other SG&A (incl. depreciation)",    // 37
+  "Various KPIs",                             // 38 (section, unused in groups)
+  "PP Active Engagements",                    // 39
+  "PP Total Headcount",                       // 40
+  "PP Avg. Monthly Cost",                     // 41
+  "PP Avg. Gross Margin",                     // 42
+  "PP Offer Acceptances (Period)",            // 43
+  "PP New Hires (Period)",                    // 44
+  "PP Attrition Rate",                        // 45
+  "PP On Standby",                            // 46
+  "PP Departures (Period)",                   // 47
+  "Net Active Engagement Growth (Period)",    // 48
+  "BP Active Engagements",                    // 49
+  "BP Avg. Monthly Cost",                     // 50
+  "BP Avg. Gross Margin",                     // 51
+  "Funding",                                  // 52 (section, unused in groups)
+  "Short-term Borrowings",                    // 53
+  "Bonds Outstanding",                        // 54
+  "Long-term Borrowings",                     // 55
+  "Interest Expense",                         // 56
+];
+const UNIT_EN = {money:"JPY M", pct:"%", yen:"JPY", ppl:"People", ken:"Cases", section:""};
+const LEVER_NAME_EN = {
+  "PP入社数":"PP New Hires",
+  "PP離職率":"PP Attrition Rate",
+  "粗利率":"Gross Margin",
+  "営業成約件数":"Sales Contracts",
+  "採用単価":"Recruitment Unit Cost",
+  "管理部門人数":"Admin Headcount",
+};
+const LEVEL_NAME_EN = {"楽観":"Optimistic","標準":"Standard","悲観":"Pessimistic"};
+const MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
 const VIEW = {
   year:    {offset:0,  count:6},
   quarter: {offset:6,  count:24},
   month:   {offset:30, count:72},
 };
-// 各ビューでの「実績」最終インデックス（2026/4月期まで実績）
 const BOUNDARY = { year:0, quarter:3, month:11 };
 
-// KPI階層グループ定義（投資家視点）
-// rows の各要素: {ki:行番号, indent:インデント段(省略=0)} または {sub:'中分類見出し'}
+// KPI hierarchy (English labels)
 const GROUPS = [
-  {id:'g1', label:'損益サマリー', open:true, rows:[
+  {id:'g1', label:'P&L Summary', open:true, rows:[
     {ki:0},{ki:6},{ki:7},
     {ki:8},{ki:14,indent:1},
     {ki:12},{ki:13},
     {ki:15},{ki:16},
   ]},
-  {id:'g2', label:'稼動・売上内訳', open:false, rows:[
+  {id:'g2', label:'Revenue Breakdown', open:false, rows:[
     {ki:1},{ki:2,indent:1},{ki:3,indent:1},{ki:4,indent:1},
     {ki:5},
   ]},
-  {id:'g3', label:'PP人員KPI', open:false, rows:[
+  {id:'g3', label:'PP Personnel KPIs', open:false, rows:[
     {sub:'PP'},
     {ki:39},{ki:40},{ki:43},{ki:44},{ki:47},{ki:45},{ki:46},{ki:48},{ki:41},{ki:42},
     {sub:'BP'},
     {ki:49},{ki:50},{ki:51},
   ]},
-  {id:'g4', label:'コスト詳細', open:false, rows:[
-    {sub:'営業部門'},
+  {id:'g4', label:'Cost Detail', open:false, rows:[
+    {sub:'Sales Dept.'},
     {ki:9},{ki:18,indent:1},{ki:21,indent:1},{ki:22,indent:1},
     {ki:19},{ki:20},{ki:23},
-    {sub:'採用部門'},
+    {sub:'Recruiting Dept.'},
     {ki:10},{ki:25,indent:1},{ki:27,indent:1},{ki:29,indent:1},{ki:30,indent:1},
     {ki:26},{ki:28},{ki:31},{ki:32},{ki:33},
-    {sub:'管理部門'},
+    {sub:'Admin Dept.'},
     {ki:11},{ki:35,indent:1},{ki:36,indent:1},{ki:37,indent:1},
   ]},
-  {id:'g5', label:'調達', open:false, rows:[
+  {id:'g5', label:'Funding', open:false, rows:[
     {ki:53},{ki:54},{ki:55},{ki:56},
   ]},
 ];
-const LEVELS = ["楽観","標準","悲観"];
+
 let D=null, state={key:"111111", view:"month"};
 let charts={};
 let curBoundary=3;
 
-// 実績/計画の境界に縦線を引くプラグイン
+// Actual/Plan boundary line plugin
 const boundaryPlugin = {
   id:'boundary',
   afterDraw(chart){
@@ -419,8 +493,8 @@ const boundaryPlugin = {
     ctx.strokeStyle='#439FD9'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
     ctx.beginPath(); ctx.moveTo(px,top); ctx.lineTo(px,bottom); ctx.stroke();
     ctx.setLineDash([]); ctx.font='10px sans-serif'; ctx.fillStyle='#8ab8d0';
-    ctx.textAlign='right'; ctx.fillText('実績',px-4,top+10);
-    ctx.textAlign='left';  ctx.fillText('計画',px+4,top+10);
+    ctx.textAlign='right'; ctx.fillText('Actual',px-4,top+10);
+    ctx.textAlign='left';  ctx.fillText('Plan',px+4,top+10);
     ctx.restore();
   }
 };
@@ -429,7 +503,7 @@ Chart.register(boundaryPlugin);
 function findKpi(name){ return D.kpis.findIndex(k=>k.name===name); }
 function periodLabels(){ return D.periods[state.view]; }
 
-// シナリオデータの遅延読み込み（1シナリオ=1ファイル、選択時に取得しキャッシュ）
+// Lazy-load scenario data (1 scenario = 1 file, fetched on demand & cached)
 let CACHE={};
 async function ensureCombo(key){
   if(CACHE[key]) return;
@@ -441,7 +515,7 @@ function sliceVals(kpiIdx){
   const v=VIEW[state.view];
   return CACHE[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
 }
-// カード用：表示ビューに関わらず常に年次データを返す
+// Cards: always return annual (last year) data regardless of view
 function yearVals(kpiIdx){
   const v=VIEW.year;
   return CACHE[state.key][kpiIdx].slice(v.offset, v.offset+v.count);
@@ -459,7 +533,6 @@ function loadGroupState(){
     const s=localStorage.getItem('invplan_groups');
     if(s){const o=JSON.parse(s);GROUPS.forEach(g=>{if(o[g.id]!==undefined)g.open=o[g.id];});return;}
   }catch(e){}
-  // 初回訪問: スマホは全グループ折りたたみ
   if(window.innerWidth<640) GROUPS.forEach(g=>g.open=false);
 }
 function saveGroupState(){
@@ -473,8 +546,12 @@ function buildParams(){
   D.params.forEach((p,i)=>{
     const d=document.createElement("div"); d.className="param";
     const cur=+state.key[i];
-    d.innerHTML=`<label>${p.key}</label><select data-pi="${i}">`+
-      p.levels.map((lv,j)=>`<option value="${j}" ${j===cur?"selected":""}>${lv}</option>`).join("")+
+    const labelEn = LEVER_NAME_EN[p.key] || p.key;
+    d.innerHTML=`<label>${labelEn}</label><select data-pi="${i}">`+
+      p.levels.map((lv,j)=>{
+        const lvEn = LEVEL_NAME_EN[lv] || lv;
+        return `<option value="${j}" ${j===cur?"selected":""}>${lvEn}</option>`;
+      }).join("")+
       `</select>`;
     c.appendChild(d);
   });
@@ -489,25 +566,25 @@ function syncParamSelects(){
 }
 
 function renderCards(){
-  // カードは表示ビューに関わらず最終年度（年次）の値を表示
+  // Cards always show final year (annual) value regardless of view
   const ylabels=D.periods.year; const yLast=ylabels.length-1; const period=ylabels[yLast];
-  // 内勤数 = 営業人数(18) + 採用部人数(25) + 管理部人員数(35)
+  // Internal staff = Sales(18) + Recruiting(25) + Admin(35)
   const naikin=(yearVals(18)[yLast]||0)+(yearVals(25)[yLast]||0)+(yearVals(35)[yLast]||0);
   const cards=[
-    {disp:'売上高',      ki:0,  extra:''},
-    {disp:'営業利益',    ki:12, extra:''},
-    {disp:'PP入社数',    ki:44, extra:''},
-    {disp:'PP離職率',    ki:45, extra:''},
-    {disp:'内勤数（営業＋採用＋管理）', ki:null, val:Math.round(naikin), unit:'人', u:'ppl', extra:''},
+    {disp:'Revenue',           ki:0,  extra:''},
+    {disp:'Operating Profit',  ki:12, extra:''},
+    {disp:'PP New Hires',      ki:44, extra:''},
+    {disp:'PP Attrition Rate', ki:45, extra:''},
+    {disp:'Internal Staff (Sales + Recruiting + Admin)', ki:null, val:Math.round(naikin), unit:'People', u:'ppl', extra:''},
   ];
   document.getElementById("cards").innerHTML=cards.map(c=>{
-    let v,unit,u;
-    if(c.ki!==null){const k=D.kpis[c.ki];v=fmt(yearVals(c.ki)[yLast],k.u);unit=k.u==="pct"?"":k.unit;u=k.u;}
+    let v,unit;
+    if(c.ki!==null){const k=D.kpis[c.ki];v=fmt(yearVals(c.ki)[yLast],k.u);unit=k.u==="pct"?"":UNIT_EN[k.u];}
     else{v=c.val.toLocaleString();unit=c.unit;}
     return `<div class="card">
       <div class="t">${c.disp}</div>
       <div class="v">${v}<span class="u">${unit}</span></div>
-      <div class="p">${c.extra||period+' 時点'}</div>
+      <div class="p">${c.extra||'As of '+period}</div>
     </div>`;
   }).join("");
 }
@@ -528,20 +605,20 @@ function renderCharts(){
   curBoundary=BOUNDARY[state.view];
   const labels=periodLabels();
   mk("ch1","bar",[
-    {label:'PP入社数',data:sliceVals(findKpi("PP入社数（累計/期）")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
+    {label:'PP New Hires',data:sliceVals(findKpi("PP入社数（累計/期）")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
   ],labels,false);
   mk("ch2","line",[
-    {label:'PP離職率',data:sliceVals(findKpi("PP離職率")),borderColor:'#f87171',backgroundColor:'transparent',tension:.3,pointRadius:3,pointBackgroundColor:'#f87171'}
+    {label:'PP Attrition Rate',data:sliceVals(findKpi("PP離職率")),borderColor:'#f87171',backgroundColor:'transparent',tension:.3,pointRadius:3,pointBackgroundColor:'#f87171'}
   ],labels,true);
   const zeros=labels.map(()=>0);
   mk("ch3","line",[
-    {label:'粗利率',data:sliceVals(findKpi("粗利率")),borderColor:'#f59e0b',backgroundColor:'transparent',tension:.3,pointRadius:2},
-    {label:'営業利益率',data:sliceVals(findKpi("営業利益率")),borderColor:'#439FD9',backgroundColor:'transparent',tension:.3,pointRadius:2},
-    {label:'損益分岐点(0%)',data:zeros,borderColor:'#4a6080',borderDash:[6,4],pointRadius:0,borderWidth:1}
+    {label:'Gross Margin',data:sliceVals(findKpi("粗利率")),borderColor:'#f59e0b',backgroundColor:'transparent',tension:.3,pointRadius:2},
+    {label:'Operating Margin',data:sliceVals(findKpi("営業利益率")),borderColor:'#439FD9',backgroundColor:'transparent',tension:.3,pointRadius:2},
+    {label:'Break-even (0%)',data:zeros,borderColor:'#4a6080',borderDash:[6,4],pointRadius:0,borderWidth:1}
   ],labels,true);
   mk("ch4","bar",[
-    {label:'営業担当',data:sliceVals(findKpi("営業人数")),backgroundColor:'#0D378C99',borderColor:'#0D378C',borderWidth:1},
-    {label:'採用担当',data:sliceVals(findKpi("採用部人数")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
+    {label:'Sales',data:sliceVals(findKpi("営業人数")),backgroundColor:'#0D378C99',borderColor:'#0D378C',borderWidth:1},
+    {label:'Recruiting',data:sliceVals(findKpi("採用部人数")),backgroundColor:'#439FD966',borderColor:'#439FD9',borderWidth:1}
   ],labels,false);
 }
 
@@ -550,7 +627,7 @@ function renderTable(){
   const bdCol=BOUNDARY[state.view]+1;
   const thead=document.querySelector("#tbl thead");
   const tbody=document.querySelector("#tbl tbody");
-  thead.innerHTML="<tr><th>KPI項目</th><th>単位</th>"+
+  thead.innerHTML="<tr><th>KPI</th><th>Unit</th>"+
     labels.map((l,i)=>`<th class="${i===bdCol?'bd':''}">${l}</th>`).join("")+"</tr>";
 
   const empties=labels.map(()=>'<td></td>').join('');
@@ -560,16 +637,18 @@ function renderTable(){
     const hidden=g.open?'':'grp-hidden';
     html+=`<tr class="grp-hdr" data-gid="${g.id}"><td>${arrow} ${g.label}</td><td></td>${empties}</tr>`;
     g.rows.forEach(row=>{
-      // 中分類見出し
+      // Sub-group header
       if(row.sub!==undefined){
         html+=`<tr class="data-row sub-hdr ${hidden}" data-gid="${g.id}"><td>${row.sub}</td><td></td>${empties}</tr>`;
         return;
       }
-      // 明細
+      // Detail row
       const k=D.kpis[row.ki];
+      const name=KPI_EN[row.ki]||k.name;
+      const unit=UNIT_EN[k.u]||k.unit;
       const vals=sliceVals(row.ki);
       const ind=row.indent?` ind${row.indent}`:'';
-      html+=`<tr class="data-row${ind} ${hidden}" data-gid="${g.id}"><td>${k.name}</td><td class="unit">${k.unit}</td>`+
+      html+=`<tr class="data-row${ind} ${hidden}" data-gid="${g.id}"><td>${name}</td><td class="unit">${unit}</td>`+
         vals.map((v,i)=>{
           const cls=[(typeof v==="number"&&v<0)?"neg":"",i===bdCol?"bd":""].filter(Boolean).join(" ");
           return `<td class="${cls}">${fmt(v,k.u)}</td>`;
@@ -578,7 +657,7 @@ function renderTable(){
   });
   tbody.innerHTML=html;
 
-  // グループヘッダークリックで開閉（全再描画せずトグル）
+  // Toggle group open/close (no full re-render)
   tbody.querySelectorAll('tr.grp-hdr').forEach(tr=>{
     tr.onclick=()=>{
       const g=GROUPS.find(gg=>gg.id===tr.dataset.gid);
@@ -606,18 +685,25 @@ function initEvents(){
   document.getElementById('ctrlToggle').onclick=()=>document.getElementById('ctrlBody').classList.toggle('open');
 }
 
-// 起動: meta.json（軽量）を読み込み → 現在シナリオのファイルのみ取得して表示。
-// 残りのシナリオは選択時に随時読み込む（初回読み込み量を約45KBに圧縮）。
+// Startup: load meta.json + current scenario file; others fetched on demand
 fetch("meta.json").then(r=>r.json()).then(async meta=>{
   D=meta;
-  // 年度ラベル末尾の「 計」を除去（表・グラフ・カード共通）
-  D.periods.year = D.periods.year.map(l => String(l).replace(/\s*計\s*$/, ""));
+  // Strip trailing " 計" from year labels, then translate JA period labels to EN
+  D.periods.year = D.periods.year
+    .map(l => String(l).replace(/\s*計\s*$/, ""))
+    .map(l => { const m=l.match(/^(\d{4})\/\d+月期/); return m?"FY"+m[1]:l; });
+  D.periods.quarter = D.periods.quarter.map(l => {
+    const m=String(l).match(/^(\d{4})\/\d+期(\d)Q/); return m?`FY${m[1]} Q${m[2]}`:l;
+  });
+  D.periods.month = D.periods.month.map(l => {
+    const m=String(l).match(/^(\d{4})-(\d{2})$/); return m?`${MONTH_EN[+m[2]-1]} ${m[1]}`:l;
+  });
   await ensureCombo(state.key);
   document.getElementById("loading").style.display="none";
   document.getElementById("app").style.display="block";
   loadGroupState();
   buildParams(); initEvents(); render();
-}).catch(e=>{ document.getElementById("loading").textContent="データ読み込み失敗: "+e; });
+}).catch(e=>{ document.getElementById("loading").textContent="Data load failed: "+e; });
 </script>
 </body>
 </html>
