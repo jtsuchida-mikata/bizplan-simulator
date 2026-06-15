@@ -335,11 +335,11 @@
 </header>
 <div class="wrap">
   <div class="tabs">
-    <button class="tab active" data-tab="goal">Reverse from Target</button>
-    <button class="tab" data-tab="sim">Simulator</button>
+    <button class="tab active" data-tab="sim">Simulator</button>
+    <button class="tab" data-tab="goal">Reverse from Operating Profit</button>
   </div>
 
-  <div id="tab-goal" class="tab-panel active">
+  <div id="tab-goal" class="tab-panel">
     <div class="goal-wrap">
       <p class="goal-lead">Keep <b>operating profit fixed</b> while you move the three levers — <b>PP new hires, attrition rate and gross margin</b> — to find the "sweet-spot" mix.<br>Move one and the unlocked others rebalance automatically (operating profit stays constant). Lock 🔒 any lever to pin it at a measured value.</p>
       <div id="goalLoading" style="padding:30px;text-align:center;color:var(--muted);">Loading data...</div>
@@ -369,7 +369,7 @@
     </div>
   </div><!-- /#tab-goal -->
 
-  <div id="tab-sim" class="tab-panel">
+  <div id="tab-sim" class="tab-panel active">
   <div id="loading">Loading data... (first time only)</div>
   <div id="app" style="display:none;">
     <div class="controls">

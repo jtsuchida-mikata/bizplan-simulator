@@ -331,11 +331,11 @@
 </header>
 <div class="wrap">
   <div class="tabs">
-    <button class="tab active" data-tab="goal">目標から逆算</button>
-    <button class="tab" data-tab="sim">シミュレーター</button>
+    <button class="tab active" data-tab="sim">シミュレーター</button>
+    <button class="tab" data-tab="goal">営業利益から逆算</button>
   </div>
 
-  <div id="tab-goal" class="tab-panel active">
+  <div id="tab-goal" class="tab-panel">
     <div class="goal-wrap">
       <p class="goal-lead"><b>営業利益を固定</b>したまま、<b>PP入社数・離職率・粗利率</b>の3つを動かして“いいとこ取り”の組み合わせを探る盤です。<br>1つを動かすと、固定していない残りが自動で釣り合います（＝営業利益は一定）。各変数は🔒で実測値に固定できます。</p>
       <div id="goalLoading" style="padding:30px;text-align:center;color:var(--muted);">データ読み込み中…</div>
@@ -365,7 +365,7 @@
     </div>
   </div><!-- /#tab-goal -->
 
-  <div id="tab-sim" class="tab-panel">
+  <div id="tab-sim" class="tab-panel active">
   <div id="loading">データ読み込み中…（初回のみ）</div>
   <div id="app" style="display:none;">
     <div class="controls">
