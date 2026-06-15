@@ -194,7 +194,110 @@
   .faq-item.open .faq-a{display:flex;gap:12px;align-items:flex-start;
     border-top:1px solid var(--line);padding-top:14px;margin-top:0;}
   .faq-a-text{flex:1;font-size:13px;line-height:1.75;color:var(--txt);}
+  /* ── いいとこ選択肢ボード（目標逆算） ── */
+  .goal-wrap{max-width:1100px;margin:0 auto;}
+  .goal-lead{color:var(--txt);font-size:14px;line-height:1.7;margin:4px 0 18px;}
+  .goal-lead b{color:var(--accent);}
+  .card-lite{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+  .gi-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+  .gi-row:last-child{margin-bottom:0;}
+  .gi-row > label{color:var(--muted);font-size:13px;font-weight:600;width:96px;flex-shrink:0;}
+  #goalYear{width:160px;}
+  .gi-target{flex:1;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  #goalSlider{flex:1;min-width:200px;accent-color:var(--accent);height:6px;cursor:pointer;}
+  .gi-num{display:flex;align-items:center;gap:6px;}
+  #goalNum{
+    width:130px;padding:10px 12px;background:var(--panel2);color:var(--accent);
+    border:1px solid var(--line);border-radius:8px;font-size:22px;font-weight:700;text-align:right;
+  }
+  #goalNum:focus{outline:none;border-color:var(--accent);}
+  .gi-num span{color:var(--muted);font-size:13px;}
+  .gi-assume{margin-top:4px;}
+  .gi-assume summary{color:var(--muted);font-size:12px;cursor:pointer;user-select:none;padding:6px 0;}
+  .gi-assume summary:hover{color:var(--accent);}
+  .gi-assume-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:10px;}
+  .gi-assume-body .param label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px;}
+
+  .goal-verdict{
+    border-radius:12px;padding:16px 20px;margin-bottom:18px;font-size:14px;line-height:1.7;
+    border:1px solid var(--line);
+  }
+  .goal-verdict.ok{background:rgba(52,211,153,.10);border-color:#1f6b52;}
+  .goal-verdict.ng{background:rgba(248,113,113,.10);border-color:#7a3030;}
+  .goal-verdict .vh{font-size:16px;font-weight:700;display:block;margin-bottom:4px;}
+  .goal-verdict.ok .vh{color:var(--good);}
+  .goal-verdict.ng .vh{color:var(--bad);}
+  .goal-verdict b{color:var(--accent);}
+
+  .goal-out-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+  .goal-out{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px;border-top:4px solid var(--accent);text-align:center;
+  }
+  .goal-out .got{color:var(--muted);font-size:12px;}
+  .goal-out .gov{font-size:30px;font-weight:800;color:var(--accent);margin:8px 0 2px;line-height:1.1;}
+  .goal-out .gov small{font-size:14px;font-weight:600;color:var(--muted);margin-left:3px;}
+  .goal-out .gomean{color:#b9d4ea;font-size:11.5px;margin-top:8px;line-height:1.5;}
+  .lvbadge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-top:8px;}
+  .lvbadge.lv0{background:rgba(52,211,153,.18);color:var(--good);}
+  .lvbadge.lv1{background:rgba(67,159,217,.18);color:var(--accent);}
+  .lvbadge.lv2{background:rgba(248,113,113,.18);color:var(--bad);}
+
+  .goal-board-title{font-size:14px;color:var(--txt);margin:0 0 4px;font-weight:700;}
+  .goal-board-sub{color:var(--muted);font-size:12px;margin:0 0 14px;}
+  .goal-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+  .gb-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;
+    cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s;
+  }
+  .gb-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.45);}
+  .gb-card.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .gb-rank{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .gb-rank .bt{background:var(--primary);color:#fff;font-weight:700;padding:2px 8px;border-radius:999px;font-size:10px;}
+  .gb-op{font-size:20px;font-weight:800;color:var(--good);margin-bottom:10px;}
+  .gb-op small{font-size:12px;color:var(--muted);font-weight:600;margin-left:3px;}
+  .gb-levers{display:flex;flex-direction:column;gap:5px;}
+  .gb-lever{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#b9d4ea;}
+  .gb-lever .ll{color:var(--muted);}
+  .gb-lever .lc{font-weight:700;}
+  .gb-lever .lc.lv0{color:var(--good);}
+  .gb-lever .lc.lv1{color:var(--accent);}
+  .gb-lever .lc.lv2{color:var(--bad);}
+  .gb-apply{margin-top:11px;text-align:center;color:var(--accent);font-size:11px;font-weight:600;}
+
+  /* ── Trade-off board ── */
+  .to-feas{border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;line-height:1.6;border:1px solid var(--line);}
+  .to-feas.ok{background:rgba(52,211,153,.10);border-color:#1f6b52;color:var(--good);}
+  .to-feas.ng{background:rgba(248,113,113,.10);border-color:#7a3030;color:var(--bad);}
+  .to-opnow{color:var(--muted);font-size:13px;margin-bottom:16px;}
+  .to-opnow b{color:var(--accent);font-size:18px;}
+  #tradeoff{display:flex;flex-direction:column;gap:14px;}
+  .to-row{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .to-row.locked{border-color:var(--accent);background:#0b1f3a;}
+  .to-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .to-name{font-size:15px;font-weight:700;color:var(--txt);}
+  .to-name small{color:var(--muted);font-size:11px;font-weight:400;margin-left:8px;}
+  .to-lock{color:var(--muted);font-size:12px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px;}
+  .to-lock input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
+  .to-body{display:flex;align-items:center;gap:18px;}
+  .to-slider{flex:1;accent-color:var(--accent);height:6px;cursor:pointer;}
+  .to-readout{min-width:130px;text-align:right;}
+  .to-val{font-size:22px;font-weight:800;color:var(--accent);}
+  .to-lvl{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-top:4px;}
+  .to-lvl.lv0{background:rgba(52,211,153,.18);color:var(--good);}
+  .to-lvl.lv1{background:rgba(67,159,217,.18);color:var(--accent);}
+  .to-lvl.lv2{background:rgba(248,113,113,.18);color:var(--bad);}
+  .to-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:6px;padding:0 2px;}
+  .to-note{color:var(--muted);font-size:11.5px;line-height:1.6;margin-top:16px;}
+
   @media(max-width:640px){
+    .to-body{flex-wrap:wrap;gap:10px;}
+    .to-readout{min-width:0;text-align:left;}
+    .goal-out-cards{grid-template-columns:1fr;gap:10px;}
+    .goal-out .gov{font-size:26px;}
+    .gi-row{flex-wrap:wrap;gap:8px;}
+    .gi-row > label{width:auto;}
+    .goal-board{grid-template-columns:1fr;}
     .ctrl-toggle{display:inline-block;}
     #ctrlBody{display:none;}
     #ctrlBody.open{display:block;}
@@ -227,14 +330,42 @@
   <div class="lang-switch"><a href="index_en.html">English</a></div>
 </header>
 <div class="wrap">
-  <!-- FAQ 公開保留中: 本文が揃ったら下記タブと #tab-faq を有効化する
   <div class="tabs">
-    <button class="tab active" data-tab="sim">シミュレーター</button>
-    <button class="tab" data-tab="faq">よくある質問</button>
+    <button class="tab active" data-tab="goal">目標から逆算</button>
+    <button class="tab" data-tab="sim">シミュレーター</button>
   </div>
-  -->
 
-  <div id="tab-sim" class="tab-panel active">
+  <div id="tab-goal" class="tab-panel active">
+    <div class="goal-wrap">
+      <p class="goal-lead"><b>営業利益を固定</b>したまま、<b>PP入社数・離職率・粗利率</b>の3つを動かして“いいとこ取り”の組み合わせを探る盤です。<br>1つを動かすと、固定していない残りが自動で釣り合います（＝営業利益は一定）。各変数は🔒で実測値に固定できます。</p>
+      <div id="goalLoading" style="padding:30px;text-align:center;color:var(--muted);">データ読み込み中…</div>
+      <div id="goalApp" style="display:none;">
+        <div class="card-lite to-target">
+          <div class="gi-row">
+            <label>対象年度</label>
+            <select id="goalYear"></select>
+          </div>
+          <div class="gi-row">
+            <label>固定する営業利益</label>
+            <div class="gi-target">
+              <input type="range" id="toPslider">
+              <div class="gi-num"><input type="number" id="toPnum"><span>百万円</span></div>
+            </div>
+          </div>
+          <details class="gi-assume">
+            <summary>前提条件（営業成約・採用単価・管理部門）を調整 ▾　※初期値は全て「標準」</summary>
+            <div id="goalAssume" class="gi-assume-body"></div>
+          </details>
+        </div>
+        <div id="toFeas" class="to-feas"></div>
+        <div class="to-opnow">連動した試算上の営業利益：<b><span id="toOpNow"></span></b> 百万円</div>
+        <div id="tradeoff"></div>
+        <p class="to-note">「楽観・標準・悲観」の3点はExcelの厳密値。その間はなめらかに補間した概算です（粗利率は営業利益に厳密に効きます）。各スライダーを動かして、釣り合いを確かめてください。</p>
+      </div>
+    </div>
+  </div><!-- /#tab-goal -->
+
+  <div id="tab-sim" class="tab-panel">
   <div id="loading">データ読み込み中…（初回のみ）</div>
   <div id="app" style="display:none;">
     <div class="controls">
@@ -618,6 +749,174 @@ fetch("meta.json").then(r=>r.json()).then(async meta=>{
   loadGroupState();
   buildParams(); initEvents(); render();
 }).catch(e=>{ document.getElementById("loading").textContent="データ読み込み失敗: "+e; });
+
+// ══════════════════════════════════════════════════════════════
+//  トレードオフ盤（営業利益を固定して3変数を連動）
+//  営業利益 = 売上(入社数,離職率) × 粗利率 − 販管費(入社数,離職率)
+//  goalseek.json data[key]=[op6,nyu6,ri6,ar6,rev6,sga6]、key6桁=各桁0楽観/1標準/2悲観
+//  3変数: 0=PP入社数, 1=PP離職率, 2=粗利率。OP=P を保つよう未ロックの変数を釣り合わせる。
+// ══════════════════════════════════════════════════════════════
+const GLV=['楽観','標準','悲観'];
+let GS=null;
+let TO={ year:5, sec:'111', P:0, opMin:0, opMax:0,
+  vals:[0,0,0], locked:[false,false,false], min:[0,0,0], max:[0,0,0],
+  axisH:[0,0,0], axisA:[0,0,0], axisG:[0,0,0], REV:null, SGA:null, feasible:true };
+const VMETA=[
+  {key:'PP入社数', sub:'累計/期・人', unit:'人', kind:'ppl', step:1, optHigh:true},
+  {key:'PP離職率', sub:'率', unit:'', kind:'pct', step:0.0001, optHigh:false},
+  {key:'粗利率',   sub:'率', unit:'', kind:'pct', step:0.0001, optHigh:true},
+];
+function tfmt(v,kind){ if(kind==='pct') return (v*100).toFixed(1)+'%'; return Math.round(v).toLocaleString(); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+// 3点 arr（昇順/降順どちらでも可）の中で x の連続インデックス[0..2]
+function fracIndex(arr,x){
+  if(arr[0]<=arr[2]){ x=Math.max(arr[0],Math.min(arr[2],x));
+    if(x<=arr[1]) return (x-arr[0])/((arr[1]-arr[0])||1);
+    return 1+(x-arr[1])/((arr[2]-arr[1])||1);
+  } else { x=Math.max(arr[2],Math.min(arr[0],x));
+    if(x>=arr[1]) return (arr[0]-x)/((arr[0]-arr[1])||1);
+    return 1+(arr[1]-x)/((arr[1]-arr[2])||1);
+  }
+}
+function bil(grid,fa,fb){
+  const a0=Math.max(0,Math.min(1,Math.floor(fa))), b0=Math.max(0,Math.min(1,Math.floor(fb)));
+  const ta=Math.max(0,Math.min(1,fa-a0)), tb=Math.max(0,Math.min(1,fb-b0));
+  return lerp(lerp(grid[a0][b0],grid[a0+1][b0],ta), lerp(grid[a0][b0+1],grid[a0+1][b0+1],ta), tb);
+}
+function revAt(H,A){ return bil(TO.REV,fracIndex(TO.axisH,H),fracIndex(TO.axisA,A)); }
+function sgaAt(H,A){ return bil(TO.SGA,fracIndex(TO.axisH,H),fracIndex(TO.axisA,A)); }
+function opAt(v){ return revAt(v[0],v[1])*v[2]-sgaAt(v[0],v[1]); }
+function dOP(idx,v){
+  const e=[Math.max(1,(TO.max[0]-TO.min[0])*1e-3),(TO.max[1]-TO.min[1])*1e-3,1e-4][idx];
+  const p=v.slice(),m=v.slice(); p[idx]+=e; m[idx]-=e;
+  return (opAt(p)-opAt(m))/(2*e);
+}
+function clampV(i){ TO.vals[i]=Math.max(TO.min[i],Math.min(TO.max[i],TO.vals[i])); }
+
+// balancers を動かして OP=P に収束させる（等分・減衰0.8・端クランプ）
+function rebalance(balancers){
+  for(let it=0; it<80; it++){
+    const gap=opAt(TO.vals)-TO.P;
+    if(Math.abs(gap)<0.5) return true;
+    const active=balancers.filter(j=>{
+      const d=dOP(j,TO.vals); if(Math.abs(d)<1e-9) return false;
+      const dir=-Math.sign(gap)*Math.sign(d);
+      if(dir>0 && TO.vals[j]>=TO.max[j]-1e-12) return false;
+      if(dir<0 && TO.vals[j]<=TO.min[j]+1e-12) return false;
+      return true;
+    });
+    if(!active.length) return false;
+    const share=gap/active.length;
+    active.forEach(j=>{ const d=dOP(j,TO.vals); TO.vals[j]-=0.8*share/d; clampV(j); });
+  }
+  return Math.abs(opAt(TO.vals)-TO.P)<2;
+}
+function applyUserChange(i){
+  clampV(i);
+  const bal=[0,1,2].filter(j=>j!==i && !TO.locked[j]);
+  TO.feasible = bal.length ? rebalance(bal) : rebalance([i]);
+  syncTO();
+}
+function applyTargetChange(){
+  const bal=[0,1,2].filter(j=>!TO.locked[j]);
+  TO.feasible = bal.length ? rebalance(bal) : false;
+  syncTO();
+}
+function setupTO(){
+  const sec=TO.sec, Y=TO.year, dat=GS.data;
+  TO.axisH=[0,1,2].map(a=>dat[a+'11'+sec][1][Y]);   // 入社数（a依存）
+  TO.axisA=[0,1,2].map(b=>dat['1'+b+'1'+sec][2][Y]); // 離職率（b依存）
+  TO.axisG=[0,1,2].map(c=>dat['11'+c+sec][3][Y]);    // 粗利率（c依存）
+  TO.REV=[0,1,2].map(a=>[0,1,2].map(b=>dat[''+a+b+'1'+sec][4][Y]));
+  TO.SGA=[0,1,2].map(a=>[0,1,2].map(b=>dat[''+a+b+'1'+sec][5][Y]));
+  TO.min[0]=Math.min(...TO.axisH); TO.max[0]=Math.max(...TO.axisH);
+  TO.min[1]=Math.min(...TO.axisA); TO.max[1]=Math.max(...TO.axisA);
+  TO.min[2]=Math.max(0.05,Math.min(...TO.axisG)-0.03); // 粗利率は線形で厳密→範囲を少し広げる
+  TO.max[2]=Math.min(0.45,Math.max(...TO.axisG)+0.03);
+}
+function resetTO(){
+  setupTO();
+  const dat=GS.data; let ops=[];
+  for(let a=0;a<3;a++)for(let b=0;b<3;b++)for(let c=0;c<3;c++) ops.push(dat[''+a+b+c+TO.sec][0][TO.year]);
+  TO.opMin=Math.floor(Math.min(...ops)/100)*100; TO.opMax=Math.ceil(Math.max(...ops)/100)*100;
+  const base=dat['111'+TO.sec];
+  TO.P=Math.round(base[0][TO.year]);
+  TO.vals=[TO.axisH[1], TO.axisA[1], base[3][TO.year]]; // 全標準の点
+  TO.locked=[false,false,false];
+  TO.feasible=rebalance([2]); // 粗利率を微調整して試算OPを目標Pに厳密一致させる
+  const ps=document.getElementById('toPslider'), pn=document.getElementById('toPnum');
+  ps.min=TO.opMin; ps.max=TO.opMax; ps.step=100; ps.value=TO.P;
+  pn.min=TO.opMin; pn.max=TO.opMax; pn.step=100; pn.value=TO.P;
+  syncTO();
+}
+function buildTO(){
+  const host=document.getElementById('tradeoff');
+  host.innerHTML=VMETA.map((m,i)=>`
+    <div class="to-row" data-row="${i}">
+      <div class="to-head">
+        <span class="to-name">${m.key}<small>${m.sub}</small></span>
+        <label class="to-lock"><input type="checkbox" data-lock="${i}"> この値で固定</label>
+      </div>
+      <div class="to-body">
+        <input type="range" class="to-slider" data-sl="${i}">
+        <div class="to-readout"><div class="to-val" data-val="${i}"></div><span class="to-lvl" data-lvl="${i}"></span></div>
+      </div>
+      <div class="to-scale"><span data-min="${i}"></span><span data-max="${i}"></span></div>
+    </div>`).join('');
+  host.querySelectorAll('input[data-sl]').forEach(s=>{
+    s.oninput=()=>{ const i=+s.dataset.sl; const raw=+s.value;
+      TO.vals[i]=VMETA[i].optHigh?raw:(TO.min[i]+TO.max[i]-raw); applyUserChange(i); };
+  });
+  host.querySelectorAll('input[data-lock]').forEach(c=>{
+    c.onchange=()=>{ const i=+c.dataset.lock; TO.locked[i]=c.checked;
+      document.querySelector(`.to-row[data-row="${i}"]`).classList.toggle('locked',c.checked); };
+  });
+}
+function syncTO(){
+  VMETA.forEach((m,i)=>{
+    const sl=document.querySelector(`input[data-sl="${i}"]`);
+    sl.min=TO.min[i]; sl.max=TO.max[i]; sl.step=m.step;
+    sl.value=m.optHigh?TO.vals[i]:(TO.min[i]+TO.max[i]-TO.vals[i]);
+    document.querySelector(`[data-val="${i}"]`).textContent=tfmt(TO.vals[i],m.kind)+(m.unit?(' '+m.unit):'');
+    const axis=[TO.axisH,TO.axisA,TO.axisG][i];
+    const fa=fracIndex(axis,TO.vals[i]);
+    const lv=fa<0.67?0:(fa<1.33?1:2);
+    const el=document.querySelector(`[data-lvl="${i}"]`);
+    el.textContent=['楽観寄り','標準前後','悲観寄り'][lv]; el.className='to-lvl lv'+lv;
+    document.querySelector(`[data-min="${i}"]`).textContent=tfmt(m.optHigh?TO.min[i]:TO.max[i],m.kind);
+    document.querySelector(`[data-max="${i}"]`).textContent=tfmt(m.optHigh?TO.max[i]:TO.min[i],m.kind);
+    document.querySelector(`input[data-lock="${i}"]`).checked=TO.locked[i];
+    document.querySelector(`.to-row[data-row="${i}"]`).classList.toggle('locked',TO.locked[i]);
+  });
+  document.getElementById('toOpNow').textContent=Math.round(opAt(TO.vals)).toLocaleString();
+  const b=document.getElementById('toFeas');
+  if(TO.feasible){ b.className='to-feas ok';
+    b.textContent='営業利益 '+TO.P.toLocaleString()+' 百万円 を一定に保っています。スライダーを動かすと、固定していない変数が釣り合います。';
+  } else { b.className='to-feas ng';
+    b.textContent='この固定条件では営業利益 '+TO.P.toLocaleString()+' 百万円 を保てません（変数が可動範囲の端に到達）。固定（🔒）を外すか、目標額を調整してください。';
+  }
+}
+function initTO(){
+  const ySel=document.getElementById('goalYear');
+  ySel.innerHTML=GS.yearLabels.map((l,i)=>`<option value="${i}" ${i===TO.year?'selected':''}>${l}</option>`).join('');
+  ySel.onchange=e=>{ TO.year=+e.target.value; resetTO(); };
+  const aEl=document.getElementById('goalAssume'); const sec=[3,4,5];
+  function pname(i){ return (D&&D.params[i])?D.params[i].key:['営業成約件数','採用単価','管理部門人数'][i-3]; }
+  aEl.innerHTML=sec.map((pi,k)=>`<div class="param"><label>${pname(pi)}</label>`+
+    `<select data-sk="${k}">${GLV.map((lv,j)=>`<option value="${j}" ${j===1?'selected':''}>${lv}</option>`).join('')}</select></div>`).join('');
+  aEl.querySelectorAll('select').forEach(s=>s.onchange=()=>{
+    const arr=TO.sec.split(''); aEl.querySelectorAll('select').forEach(ss=>arr[+ss.dataset.sk]=ss.value);
+    TO.sec=arr.join(''); resetTO();
+  });
+  const ps=document.getElementById('toPslider'), pn=document.getElementById('toPnum');
+  ps.oninput=()=>{ TO.P=+ps.value; pn.value=ps.value; applyTargetChange(); };
+  pn.oninput=()=>{ let v=+pn.value; if(isNaN(v))return; TO.P=v; ps.value=v; applyTargetChange(); };
+  buildTO(); resetTO();
+  document.getElementById('goalLoading').style.display='none';
+  document.getElementById('goalApp').style.display='block';
+}
+fetch('goalseek.json').then(r=>r.json()).then(g=>{ GS=g; initTO(); })
+  .catch(e=>{ document.getElementById('goalLoading').textContent='データ読み込み失敗: '+e; });
 </script>
 </body>
 </html>
