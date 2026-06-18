@@ -277,6 +277,7 @@
   .to-feas{border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;line-height:1.6;border:1px solid var(--line);}
   .to-feas.ok{background:rgba(52,211,153,.10);border-color:#1f6b52;color:var(--good);}
   .to-feas.ng{background:rgba(248,113,113,.10);border-color:#7a3030;color:var(--bad);}
+  .to-feas.est{background:rgba(245,158,11,.10);border-color:#8a6516;color:#f59e0b;}
   .to-opnow{color:var(--muted);font-size:13px;margin-bottom:16px;}
   .to-opnow b{color:var(--accent);font-size:18px;}
   #tradeoff{display:flex;flex-direction:column;gap:14px;}
@@ -295,6 +296,7 @@
   .to-lvl.lv0{background:rgba(52,211,153,.18);color:var(--good);}
   .to-lvl.lv1{background:rgba(67,159,217,.18);color:var(--accent);}
   .to-lvl.lv2{background:rgba(248,113,113,.18);color:var(--bad);}
+  .to-lvl.est{background:rgba(245,158,11,.18);color:#f59e0b;}
   .to-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:6px;padding:0 2px;}
   .to-note{color:var(--muted);font-size:11.5px;line-height:1.6;margin-top:16px;}
 
@@ -368,7 +370,7 @@
         <div id="toFeas" class="to-feas"></div>
         <div class="to-opnow">連動した試算上の営業利益：<b><span id="toOpNow"></span></b> 百万円</div>
         <div id="tradeoff"></div>
-        <p class="to-note">「楽観・標準・悲観」の3点はExcelの厳密値。その間はなめらかに補間した概算です（粗利率は営業利益に厳密に効きます）。各スライダーを動かして、釣り合いを確かめてください。</p>
+        <p class="to-note">「楽観・標準・悲観」の3点はExcelの厳密値。その間はなめらかに補間した概算です（粗利率は営業利益に厳密に効きます）。各スライダーを動かして、釣り合いを確かめてください。<br>営業利益が計画上の最低を下回る領域は、入社数・離職率を計画の最悪値に固定し粗利率を外挿した<b style="color:#f59e0b">推定値</b>です（下限＝営業利益0／損益分岐）。</p>
       </div>
     </div>
   </div><!-- /#tab-goal -->
@@ -819,17 +821,25 @@ function rebalance(balancers){
   }
   return Math.abs(opAt(TO.vals)-TO.P)<2;
 }
-function applyUserChange(i){
-  clampV(i);
-  const bal=[0,1,2].filter(j=>j!==i && !TO.locked[j]);
-  TO.feasible = bal.length ? rebalance(bal) : rebalance([i]);
+function inEstimate(){ return TO.P < TO.opMin - 0.5; } // 計画下限を下回る＝推定領域
+function balance(changedIdx){
+  if(inEstimate()){
+    // 推定モード: 入社数・離職率を計画の最悪値(悲観)に固定し、粗利率で営業利益=Pに合わせる（線形で厳密）
+    TO.vals[0]=TO.axisH[2]; TO.vals[1]=TO.axisA[2];
+    TO.vals[2]=(TO.P+TO.SGA[2][2])/TO.REV[2][2]; clampV(2);
+    TO.feasible=Math.abs(opAt(TO.vals)-TO.P)<2;
+  } else if(changedIdx>=0){
+    clampV(changedIdx);
+    const bal=[0,1,2].filter(j=>j!==changedIdx && !TO.locked[j]);
+    TO.feasible = bal.length ? rebalance(bal) : rebalance([changedIdx]);
+  } else {
+    const bal=[0,1,2].filter(j=>!TO.locked[j]);
+    TO.feasible = bal.length ? rebalance(bal) : false;
+  }
   syncTO();
 }
-function applyTargetChange(){
-  const bal=[0,1,2].filter(j=>!TO.locked[j]);
-  TO.feasible = bal.length ? rebalance(bal) : false;
-  syncTO();
-}
+function applyUserChange(i){ balance(i); }
+function applyTargetChange(){ balance(-1); }
 function setupTO(){
   const sec=TO.sec, Y=TO.year, dat=GS.data;
   TO.axisH=[0,1,2].map(a=>dat[a+'11'+sec][1][Y]);   // 入社数（a依存）
@@ -841,6 +851,9 @@ function setupTO(){
   TO.min[1]=Math.min(...TO.axisA); TO.max[1]=Math.max(...TO.axisA);
   TO.min[2]=Math.max(0.05,Math.min(...TO.axisG)-0.03); // 粗利率は線形で厳密→範囲を少し広げる
   TO.max[2]=Math.min(0.45,Math.max(...TO.axisG)+0.03);
+  // 営業利益0(損益分岐)まで下げられるよう、粗利率の下限を「最悪点(悲観)での損益分岐粗利率」まで拡張
+  TO.breakeven=TO.SGA[2][2]/TO.REV[2][2];
+  TO.min[2]=Math.min(TO.min[2], TO.breakeven);
 }
 function resetTO(){
   setupTO();
@@ -852,9 +865,10 @@ function resetTO(){
   TO.vals=[TO.axisH[1], TO.axisA[1], base[3][TO.year]]; // 全標準の点
   TO.locked=[false,false,false];
   TO.feasible=rebalance([2]); // 粗利率を微調整して試算OPを目標Pに厳密一致させる
+  const pFloor=Math.min(0,TO.opMin); // 計画下限が黒字の年度は営業利益0まで下げられる
   const ps=document.getElementById('toPslider'), pn=document.getElementById('toPnum');
-  ps.min=TO.opMin; ps.max=TO.opMax; ps.step=100; ps.value=TO.P;
-  pn.min=TO.opMin; pn.max=TO.opMax; pn.step=100; pn.value=TO.P;
+  ps.min=pFloor; ps.max=TO.opMax; ps.step=100; ps.value=TO.P;
+  pn.min=pFloor; pn.max=TO.opMax; pn.step=100; pn.value=TO.P;
   syncTO();
 }
 function buildTO(){
@@ -881,6 +895,7 @@ function buildTO(){
   });
 }
 function syncTO(){
+  const est=TO.feasible && inEstimate();
   VMETA.forEach((m,i)=>{
     const sl=document.querySelector(`input[data-sl="${i}"]`);
     sl.min=TO.min[i]; sl.max=TO.max[i]; sl.step=m.step;
@@ -890,7 +905,8 @@ function syncTO(){
     const fa=fracIndex(axis,TO.vals[i]);
     const lv=fa<0.67?0:(fa<1.33?1:2);
     const el=document.querySelector(`[data-lvl="${i}"]`);
-    el.textContent=['楽観寄り','標準前後','悲観寄り'][lv]; el.className='to-lvl lv'+lv;
+    if(est && i===2){ el.textContent='推定（計画範囲外）'; el.className='to-lvl est'; }
+    else { el.textContent=['楽観寄り','標準前後','悲観寄り'][lv]; el.className='to-lvl lv'+lv; }
     document.querySelector(`[data-min="${i}"]`).textContent=tfmt(m.optHigh?TO.min[i]:TO.max[i],m.kind);
     document.querySelector(`[data-max="${i}"]`).textContent=tfmt(m.optHigh?TO.max[i]:TO.min[i],m.kind);
     document.querySelector(`input[data-lock="${i}"]`).checked=TO.locked[i];
@@ -898,10 +914,12 @@ function syncTO(){
   });
   document.getElementById('toOpNow').textContent=Math.round(opAt(TO.vals)).toLocaleString();
   const b=document.getElementById('toFeas');
-  if(TO.feasible){ b.className='to-feas ok';
-    b.textContent='営業利益 '+TO.P.toLocaleString()+' 百万円 を一定に保っています。スライダーを動かすと、固定していない変数が釣り合います。';
-  } else { b.className='to-feas ng';
+  if(!TO.feasible){ b.className='to-feas ng';
     b.textContent='この固定条件では営業利益 '+TO.P.toLocaleString()+' 百万円 を保てません（変数が可動範囲の端に到達）。固定（🔒）を外すか、目標額を調整してください。';
+  } else if(est){ b.className='to-feas est';
+    b.textContent='推定値：営業利益 '+TO.P.toLocaleString()+' 百万円 は元事業計画の範囲外です（計画上の最低は約 '+TO.opMin.toLocaleString()+' 百万円）。入社数・離職率を計画の最悪値に固定し、粗利率を計画より低く外挿した概算です（下限は営業利益0＝損益分岐）。';
+  } else { b.className='to-feas ok';
+    b.textContent='営業利益 '+TO.P.toLocaleString()+' 百万円 を一定に保っています。スライダーを動かすと、固定していない変数が釣り合います。';
   }
 }
 function initTO(){

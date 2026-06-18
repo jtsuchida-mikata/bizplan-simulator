@@ -278,6 +278,7 @@
   .to-feas{border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;line-height:1.6;border:1px solid var(--line);}
   .to-feas.ok{background:rgba(52,211,153,.10);border-color:#1f6b52;color:var(--good);}
   .to-feas.ng{background:rgba(248,113,113,.10);border-color:#7a3030;color:var(--bad);}
+  .to-feas.est{background:rgba(245,158,11,.10);border-color:#8a6516;color:#f59e0b;}
   .to-opnow{color:var(--muted);font-size:13px;margin-bottom:16px;}
   .to-opnow b{color:var(--accent);font-size:18px;}
   #tradeoff{display:flex;flex-direction:column;gap:14px;}
@@ -296,6 +297,7 @@
   .to-lvl.lv0{background:rgba(52,211,153,.18);color:var(--good);}
   .to-lvl.lv1{background:rgba(67,159,217,.18);color:var(--accent);}
   .to-lvl.lv2{background:rgba(248,113,113,.18);color:var(--bad);}
+  .to-lvl.est{background:rgba(245,158,11,.18);color:#f59e0b;}
   .to-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:6px;padding:0 2px;}
   .to-note{color:var(--muted);font-size:11.5px;line-height:1.6;margin-top:16px;}
 
@@ -372,7 +374,7 @@
         <div id="toFeas" class="to-feas"></div>
         <div class="to-opnow">Resulting operating profit (linked): <b><span id="toOpNow"></span></b> JPY M</div>
         <div id="tradeoff"></div>
-        <p class="to-note">The three points (Optimistic / Standard / Pessimistic) are exact Excel values; values in between are smoothly interpolated approximations (gross margin affects operating profit exactly). Drag each slider to see how the levers balance.</p>
+        <p class="to-note">The three points (Optimistic / Standard / Pessimistic) are exact Excel values; values in between are smoothly interpolated approximations (gross margin affects operating profit exactly). Drag each slider to see how the levers balance.<br>Where operating profit falls below the plan minimum, hires and attrition are pinned at the plan worst case and gross margin is extrapolated — these are <b style="color:#f59e0b">estimates</b> (floor = operating profit 0 / break-even).</p>
       </div>
     </div>
   </div><!-- /#tab-goal -->
@@ -902,17 +904,25 @@ function rebalance(balancers){
   }
   return Math.abs(opAt(TO.vals)-TO.P)<2;
 }
-function applyUserChange(i){
-  clampV(i);
-  const bal=[0,1,2].filter(j=>j!==i && !TO.locked[j]);
-  TO.feasible = bal.length ? rebalance(bal) : rebalance([i]);
+function inEstimate(){ return TO.P < TO.opMin - 0.5; } // below the plan floor = estimate region
+function balance(changedIdx){
+  if(inEstimate()){
+    // estimate mode: pin hires & attrition at the plan's worst (pessimistic); solve gross margin to hit OP=P (linear/exact)
+    TO.vals[0]=TO.axisH[2]; TO.vals[1]=TO.axisA[2];
+    TO.vals[2]=(TO.P+TO.SGA[2][2])/TO.REV[2][2]; clampV(2);
+    TO.feasible=Math.abs(opAt(TO.vals)-TO.P)<2;
+  } else if(changedIdx>=0){
+    clampV(changedIdx);
+    const bal=[0,1,2].filter(j=>j!==changedIdx && !TO.locked[j]);
+    TO.feasible = bal.length ? rebalance(bal) : rebalance([changedIdx]);
+  } else {
+    const bal=[0,1,2].filter(j=>!TO.locked[j]);
+    TO.feasible = bal.length ? rebalance(bal) : false;
+  }
   syncTO();
 }
-function applyTargetChange(){
-  const bal=[0,1,2].filter(j=>!TO.locked[j]);
-  TO.feasible = bal.length ? rebalance(bal) : false;
-  syncTO();
-}
+function applyUserChange(i){ balance(i); }
+function applyTargetChange(){ balance(-1); }
 function setupTO(){
   const sec=TO.sec, Y=TO.year, dat=GS.data;
   TO.axisH=[0,1,2].map(a=>dat[a+'11'+sec][1][Y]);
@@ -924,6 +934,9 @@ function setupTO(){
   TO.min[1]=Math.min(...TO.axisA); TO.max[1]=Math.max(...TO.axisA);
   TO.min[2]=Math.max(0.05,Math.min(...TO.axisG)-0.03);
   TO.max[2]=Math.min(0.45,Math.max(...TO.axisG)+0.03);
+  // allow lowering down to break-even (OP=0): extend gross-margin floor to the break-even margin at the worst point
+  TO.breakeven=TO.SGA[2][2]/TO.REV[2][2];
+  TO.min[2]=Math.min(TO.min[2], TO.breakeven);
 }
 function resetTO(){
   setupTO();
@@ -935,9 +948,10 @@ function resetTO(){
   TO.vals=[TO.axisH[1], TO.axisA[1], base[3][TO.year]];
   TO.locked=[false,false,false];
   TO.feasible=rebalance([2]);
+  const pFloor=Math.min(0,TO.opMin); // for years whose plan floor is positive, allow down to operating profit 0
   const ps=document.getElementById('toPslider'), pn=document.getElementById('toPnum');
-  ps.min=TO.opMin; ps.max=TO.opMax; ps.step=100; ps.value=TO.P;
-  pn.min=TO.opMin; pn.max=TO.opMax; pn.step=100; pn.value=TO.P;
+  ps.min=pFloor; ps.max=TO.opMax; ps.step=100; ps.value=TO.P;
+  pn.min=pFloor; pn.max=TO.opMax; pn.step=100; pn.value=TO.P;
   syncTO();
 }
 function buildTO(){
@@ -964,6 +978,7 @@ function buildTO(){
   });
 }
 function syncTO(){
+  const est=TO.feasible && inEstimate();
   VMETA.forEach((m,i)=>{
     const sl=document.querySelector(`input[data-sl="${i}"]`);
     sl.min=TO.min[i]; sl.max=TO.max[i]; sl.step=m.step;
@@ -973,7 +988,8 @@ function syncTO(){
     const fa=fracIndex(axis,TO.vals[i]);
     const lv=fa<0.67?0:(fa<1.33?1:2);
     const el=document.querySelector(`[data-lvl="${i}"]`);
-    el.textContent=['Optimistic side','Around standard','Pessimistic side'][lv]; el.className='to-lvl lv'+lv;
+    if(est && i===2){ el.textContent='Estimate (beyond plan)'; el.className='to-lvl est'; }
+    else { el.textContent=['Optimistic side','Around standard','Pessimistic side'][lv]; el.className='to-lvl lv'+lv; }
     document.querySelector(`[data-min="${i}"]`).textContent=tfmt(m.optHigh?TO.min[i]:TO.max[i],m.kind);
     document.querySelector(`[data-max="${i}"]`).textContent=tfmt(m.optHigh?TO.max[i]:TO.min[i],m.kind);
     document.querySelector(`input[data-lock="${i}"]`).checked=TO.locked[i];
@@ -981,10 +997,12 @@ function syncTO(){
   });
   document.getElementById('toOpNow').textContent=Math.round(opAt(TO.vals)).toLocaleString();
   const b=document.getElementById('toFeas');
-  if(TO.feasible){ b.className='to-feas ok';
-    b.textContent='Operating profit held at '+TO.P.toLocaleString()+' JPY M. Move a slider and the unlocked levers rebalance.';
-  } else { b.className='to-feas ng';
+  if(!TO.feasible){ b.className='to-feas ng';
     b.textContent='Operating profit of '+TO.P.toLocaleString()+' JPY M cannot be held under these locks (a lever hit its range limit). Unlock 🔒 a lever or adjust the target.';
+  } else if(est){ b.className='to-feas est';
+    b.textContent='Estimate: operating profit of '+TO.P.toLocaleString()+' JPY M is beyond the original plan (plan minimum is about '+TO.opMin.toLocaleString()+' JPY M). Hires and attrition are pinned at the plan worst case and gross margin is extrapolated below the plan (floor = operating profit 0 / break-even).';
+  } else { b.className='to-feas ok';
+    b.textContent='Operating profit held at '+TO.P.toLocaleString()+' JPY M. Move a slider and the unlocked levers rebalance.';
   }
 }
 function initTO(){
